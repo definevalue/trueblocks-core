@@ -9,11 +9,13 @@ import "encoding/json"
 type IpfsHash = string
 
 type PinDescriptor struct {
-	FileName  string   `json:"fileName"`
-	BloomHash IpfsHash `json:"bloomHash"`
-	IndexHash IpfsHash `json:"indexHash"`
-	// file size
-	// md5 (gzipped file)
+	FileName      string   `json:"fileName"`
+	BloomHash     IpfsHash `json:"bloomHash"`
+	IndexHash     IpfsHash `json:"indexHash"`
+	BloomChecksum string   `json:"bloomChecksum"`
+	IndexChecksum string   `json:"indexChecksum"`
+	// file size (gzipped file)
+	// md5
 }
 
 type Manifest struct {
