@@ -16,7 +16,7 @@ func Test_validateExistingChunks_Checksum(t *testing.T) {
 	io.WriteString(h, "some string")
 	checksum := h.Sum(nil)
 
-	chunks := []validatedChunk{
+	chunks := []chunkMetadata{
 		{
 			fileName:  "test-file",
 			file:      &os.File{},
@@ -45,7 +45,7 @@ func Test_validateExistingChunks_ChecksumInvalid(t *testing.T) {
 	io.WriteString(h, "some string")
 	checksum := h.Sum(nil)
 
-	chunks := []validatedChunk{
+	chunks := []chunkMetadata{
 		{
 			fileName:  "test-file",
 			file:      &os.File{},
@@ -89,7 +89,7 @@ func Test_validateExistingChunks_FileMismatch(t *testing.T) {
 	io.WriteString(h, "some string")
 	checksum := h.Sum(nil)
 
-	chunks := []validatedChunk{
+	chunks := []chunkMetadata{
 		{
 			fileName:  "test-file",
 			file:      &os.File{},

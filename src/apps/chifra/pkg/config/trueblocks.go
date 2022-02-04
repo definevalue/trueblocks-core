@@ -27,6 +27,7 @@ type trueBlocksSettings struct {
 	IndexPath    string
 	Chain        string
 	EtherscanKey string `toml:"etherscan_key"`
+	IpfsNode     string
 }
 
 type TrueBlocksConfig struct {
@@ -40,6 +41,7 @@ func init() {
 	trueBlocksViper.SetDefault("Settings.RpcProvider", "http://localhost:8545")
 	trueBlocksViper.SetDefault("Settings.CachePath", GetPathToConfig(false /* withChain */)+"cache")
 	trueBlocksViper.SetDefault("Settings.IndexPath", GetPathToConfig(false /* withChain */)+"unchained")
+	trueBlocksViper.SetDefault("Settings.IpfsNode", "localhost:5001")
 }
 
 // ReadGlobal reads and the configuration located in trueBlocks.toml file

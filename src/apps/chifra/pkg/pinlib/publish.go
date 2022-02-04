@@ -1,51 +1,25 @@
 package pinlib
 
 import (
-	"crypto/md5"
+	"bytes"
+	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
+	"sync"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/config"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ipfs"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/pinlib/manifest"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/progress"
+	ants "github.com/panjf2000/ants/v2"
 )
-
-// func makeFileMap(files []fs.FileInfo) map[string]struct{} {
-// 	fmap := make(map[string]struct{})
-
-// 	for _, file := range files {
-// 		fmap[file.Name()] = struct{}{}
-// 	}
-
-// 	return fmap
-// }
-
-// func filterNewChunks(files []fs.FileInfo, pins []manifest.PinDescriptor) []fs.FileInfo {
-// 	pmap := make(map[string]struct{})
-// 	for _, pin := range pins {
-// 		pmap[pin.FileName] = struct{}{}
-// 	}
-
-// 	newChunks := make([]fs.FileInfo, 0, len(files))
-// 	for _, file := range files {
-// 		if _, ok := pmap[file.Name()]; ok {
-// 			continue
-// 		}
-// 		newChunks = append(newChunks, file)
-// 	}
-
-// 	return newChunks
-// }
-
-func makeChecksum(file *os.File) ([]byte, error) {
-	checksum := md5.New()
-	if _, err := io.Copy(checksum, file); err != nil {
-		return nil, err
-	}
-
-	return checksum.Sum(nil), nil
-}
 
 type ErrMissingChunk struct {
 	fileName string
@@ -55,7 +29,7 @@ func (e *ErrMissingChunk) Error() string {
 	return "missing chunk: " + e.fileName
 }
 
-type validatedChunk struct {
+type chunkMetadata struct {
 	cacheType cache.CacheType
 	fileName  string
 	file      *os.File
@@ -65,18 +39,7 @@ type validatedChunk struct {
 	cid       manifest.IpfsHash
 }
 
-type ErrMismatchedChecksum struct {
-	wrongChecksum    []byte
-	expectedChecksum []byte
-	fileName         string
-}
-
-func (err *ErrMismatchedChecksum) Error() string {
-	return fmt.Sprintf("mismatched checksum for file %s: expected %s, got %s", err.fileName, err.expectedChecksum, err.wrongChecksum)
-}
-
-func validateExistingChunks(chunks []validatedChunk, pins []manifest.PinDescriptor, existingFiles map[string]struct{}) error {
-	pinFileNameToHash := make(map[string]string)
+func validateChunksNotMissing(pins []manifest.PinDescriptor, existingFiles map[string]struct{}) error {
 	for _, pin := range pins {
 		// We require all chunks listed in manifest to exist on disk
 		if _, ok := existingFiles[pin.FileName]; !ok {
@@ -84,75 +47,175 @@ func validateExistingChunks(chunks []validatedChunk, pins []manifest.PinDescript
 				fileName: pin.FileName,
 			}
 		}
-
-		pinHash := pin.IndexChecksum
-		// We expect all chunks to be of the same cacheType
-		if chunks[0].cacheType == cache.BloomChunk {
-			pinHash = pin.IndexChecksum
-		}
-
-		pinFileNameToHash[pin.FileName] = pinHash
-	}
-
-	for _, chunk := range chunks {
-		pinHash, ok := pinFileNameToHash[chunk.fileName]
-		// The chunk is new, so its hash is missing in manifest
-		if !ok {
-			continue
-		}
-
-		if pinHash != string(chunk.checksum) {
-			return &ErrMismatchedChecksum{
-				fileName:         chunk.fileName,
-				expectedChecksum: []byte(pinHash),
-				wrongChecksum:    chunk.checksum,
-			}
-		}
 	}
 
 	return nil
 }
 
-func prepareChunksByType(cacheType cache.CacheType, existingManifest *manifest.Manifest) ([]validatedChunk, error) {
+type ErrMismatchedCid struct {
+	fileName    string
+	expectedCid string
+	actualCid   string
+}
+
+func (err *ErrMismatchedCid) Error() string {
+	return fmt.Sprintf(
+		"wrong CID for file %s: expected %s, but got %s",
+		err.fileName,
+		err.expectedCid,
+		err.actualCid,
+	)
+}
+
+type pinDescriptorFragment struct {
+	ChunkType cache.CacheType
+	FileName  string
+	FileSize  int64
+	Cid       manifest.IpfsHash
+}
+
+func prepareChunksByType(cacheType cache.CacheType, existingManifest *manifest.Manifest) ([]pinDescriptorFragment, error) {
 	cachePath := cache.Path{}
 	cachePath.New(cacheType)
+	ctx, cancel := context.WithCancel(context.Background())
+	poolSize := 4
 
-	existingFiles := make(map[string]struct{})
+	readGroup := sync.WaitGroup{}
+	writeGroup := sync.WaitGroup{}
+
+	// existingFiles := make(map[string]struct{})
 	files, err := ioutil.ReadDir(cachePath.String())
 	if err != nil {
+		cancel()
 		return nil, err
 	}
-
-	validatedChunks := make([]validatedChunk, 0, len(files))
-	for _, file := range files {
-		openedFile, err := os.Open(cachePath.GetFullPath(file.Name()))
-		if err != nil {
-			return nil, err
-		}
-		existingFiles[file.Name()] = struct{}{}
-
-		checksum, err := makeChecksum(openedFile)
-		if err != nil {
-			return nil, err
+	pinToCid := make(map[string]string, len(existingManifest.Pins))
+	for _, pin := range existingManifest.Pins {
+		cid := pin.BloomHash
+		if cacheType == cache.IndexChunk {
+			cid = pin.IndexHash
 		}
 
-		// TODO: replace with archive size
-		// stat, err := openedFile.Stat()
-		// if err != nil {
-		// 	return nil, err
-		// }
-		validatedChunks = append(validatedChunks, validatedChunk{
-			fileName: openedFile.Name(),
-			file:     openedFile,
-			// size:     stat.Size(),
-			checksum: checksum,
-		})
+		pinToCid[pin.FileName] = cid
 	}
 
-	err = validateExistingChunks(validatedChunks, existingManifest.Pins, existingFiles)
+	// metadata := make([]chunkMetadata, 0, len(files))
+
+	progressChannel := make(chan progress.Progress)
+	fileChannel := make(chan *os.File)
+	fragmentChannel := make(chan *pinDescriptorFragment)
+
+	readPool, err := ants.NewPoolWithFunc(poolSize, func(param interface{}) {
+		defer readGroup.Done()
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			file := param.(fs.FileInfo)
+			openedFile, err := os.Open(cachePath.GetFullPath(file.Name()))
+			if err != nil {
+				progressChannel <- progress.Progress{
+					Event:   progress.Error,
+					Message: err.Error(),
+				}
+				cancel()
+				return
+			}
+			fileChannel <- openedFile
+		}
+	})
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+	defer readPool.Release()
+
+	writePool, err := ants.NewPoolWithFunc(poolSize, func(param interface{}) {
+		file := param.(*os.File)
+		// - gzip
+		archive := bytes.Buffer{}
+		archiveWriter := gzip.NewWriter(&archive)
+
+		// We are not setting archive timestamp to make sure we always get the same
+		// archive for a given content
+		archiveWriter.Name = file.Name()
+		written, err := io.Copy(archiveWriter, file)
+		if err != nil {
+			progressChannel <- progress.Progress{
+				Event:   progress.Error,
+				Message: err.Error(),
+			}
+			cancel()
+			return
+		}
+
+		// - keep file size
+
+		// - add to ipfs
+
+		ipfsShell := ipfs.Connect(config.ReadTrueBlocks().Settings.IpfsNode)
+		cid, err := ipfsShell.Add(bytes.NewReader(archive.Bytes()))
+		if err != nil {
+			progressChannel <- progress.Progress{
+				Event:   progress.Error,
+				Message: err.Error(),
+			}
+			cancel()
+			return
+		}
+
+		// - check if CID matches manifest
+		pinFileName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
+		previousCid, ok := pinToCid[pinFileName]
+		if ok && previousCid != cid {
+			err = &ErrMismatchedCid{
+				fileName:    pinFileName,
+				expectedCid: previousCid,
+				actualCid:   cid,
+			}
+			progressChannel <- progress.Progress{
+				Event:   progress.Error,
+				Message: err.Error(),
+			}
+			cancel()
+			return
+		}
+
+		fragmentChannel <- &pinDescriptorFragment{
+			FileName: pinFileName,
+			FileSize: written,
+			Cid:      cid,
+		}
+	})
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+	defer writePool.Release()
+
+	writeGroup.Add(1)
+	go func() {
+		for file := range fileChannel {
+			writeGroup.Add(1)
+			writePool.Invoke(file)
+		}
+		writeGroup.Done()
+	}()
+
+	for _, file := range files {
+		readGroup.Add(1)
+		readPool.Invoke(file)
+	}
+
+	var result []pinDescriptorFragment
+	for fragment := range fragmentChannel {
+		result = append(result, *fragment)
+	}
+
+	// err = validateChunksNotMissing(existingManifest.Pins, existingFiles)
 
 	// TODO
-	return nil, err
+	return result, err
 }
 
 // func PublishNewManifest(existingManifest *manifest.Manifest) (*manifest.Manifest, error) {
