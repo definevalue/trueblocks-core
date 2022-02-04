@@ -46,6 +46,7 @@ type settingsGroup struct {
 	IndexPath    string `toml:"indexPath"`
 	DefaultChain string `toml:"defaultChain"`
 	EtherscanKey string `toml:"etherscanKey"`
+	IpfsNode     string
 }
 
 type ConfigFile struct {
@@ -61,6 +62,7 @@ func init() {
 	trueBlocksViper.SetDefault("Settings.IndexPath", GetPathToRootConfig()+"unchained/")
 	trueBlocksViper.SetDefault("Settings.DefaultChain", "mainnet")
 	trueBlocksViper.SetDefault("Settings.EtherscanKey", "")
+	trueBlocksViper.SetDefault("Settings.IpfsNode", "localhost:5001")
 }
 
 // GetRootConfig reads and the configuration located in trueBlocks.toml file. Note
