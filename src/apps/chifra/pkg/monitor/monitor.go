@@ -6,6 +6,7 @@ package monitor
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,46 +17,55 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/index"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
-
-type MonitorLight struct {
-	Address  common.Address `json:"address"`
-	NRecords uint32         `json:"nRecords"`
-	FileSize uint32         `json:"fileSize"`
-}
-
-func NewMonitorLight(chain, addr string) MonitorLight {
-	m := NewMonitor(chain, addr)
-	return MonitorLight{Address: m.Address, NRecords: m.Count, FileSize: m.FileSize}
-}
 
 type Monitor struct {
 	Address  common.Address `json:"address"`
 	Count    uint32         `json:"count"`
 	FileSize uint32         `json:"fileSize"`
-	Path     string
-	File     *os.File
-}
-
-func (mon Monitor) String() string {
-	return fmt.Sprintf("%s\t%d\t%d", mon.Address, mon.Count, mon.FileSize)
+	Deleted  bool           `json:"deleted,omitempty"`
+	Chain    string         `json:"-"`
+	File     *os.File       `json:"-"`
 }
 
 func NewMonitor(chain, addr string) Monitor {
 	mon := new(Monitor)
-	mon.Address = common.HexToAddress(addr)
-	mon.Reload(chain)
+	mon.Address = common.HexToAddress(strings.ToLower(addr))
+	mon.Chain = chain
+	mon.Reload()
 	return *mon
 }
 
-func (mon *Monitor) Reload(chain string) (uint32, error) {
-	mon.Path, _ = addr_2_Fn(chain, mon.Address)
-	if !file.FileExists(mon.Path) {
-		// Make sure the file exists since we've been told to monitor it
-		file.Touch(mon.Path)
+func (mon Monitor) String() string {
+	if mon.Deleted {
+		return fmt.Sprintf("%s\t%d\t%d\t%t", hexutil.Encode(mon.Address.Bytes()), mon.Count, mon.FileSize, mon.Deleted)
+
 	}
-	mon.FileSize = uint32(file.FileSize(mon.Path))
-	mon.Count = uint32(file.FileSize(mon.Path) / index.AppRecordWidth)
+	return fmt.Sprintf("%s\t%d\t%d", hexutil.Encode(mon.Address.Bytes()), mon.Count, mon.FileSize)
+}
+
+func (mon Monitor) ToJSON() string {
+	bytes, err := json.Marshal(mon)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
+
+func (mon *Monitor) Path() (path string) {
+	path = config.GetPathToCache(mon.Chain) + "monitors/" + strings.ToLower(mon.Address.Hex()) + ".acct.bin"
+	return
+}
+
+func (mon *Monitor) Reload() (uint32, error) {
+	path := mon.Path()
+	if !file.FileExists(path) {
+		// Make sure the file exists since we've been told to monitor it
+		file.Touch(path)
+	}
+	mon.FileSize = uint32(file.FileSize(path))
+	mon.Count = uint32(file.FileSize(path) / index.AppRecordWidth)
 	return mon.Count, nil
 }
 
@@ -73,7 +83,8 @@ func (mon *Monitor) Peek(idx uint32) (app index.AppearanceRecord, err error) {
 	}
 
 	if mon.File == nil {
-		mon.File, err = os.OpenFile(mon.Path, os.O_RDONLY, 0644)
+		path := mon.Path()
+		mon.File, err = os.OpenFile(path, os.O_RDONLY, 0644)
 		if err != nil {
 			return
 		}
@@ -94,17 +105,14 @@ func (mon *Monitor) Peek(idx uint32) (app index.AppearanceRecord, err error) {
 	return
 }
 
-func addr_2_Fn(chain string, addr common.Address) (string, error) {
-	return config.GetPathToCache(chain) + "monitors/" + addr.Hex() + ".acct.bin", nil
-}
-
-func (mon *Monitor) Append(apps []index.AppearanceRecord) (err error) {
+func (mon *Monitor) Append(apps []index.AppearanceRecord) (count uint32, err error) {
 	if mon.File != nil {
 		mon.File.Close()
 		mon.File = nil
 	}
 
-	f, err := os.OpenFile(mon.Path, os.O_WRONLY|os.O_APPEND, 0644)
+	path := mon.Path()
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return
 	}
@@ -124,5 +132,34 @@ func (mon *Monitor) Append(apps []index.AppearanceRecord) (err error) {
 		}
 	}
 
+	mon.Reload()
+	count = mon.Count
+
 	return
+}
+
+func (mon *Monitor) Delete() (prev bool) {
+	prev = mon.Deleted
+	mon.Deleted = true
+	return
+}
+
+func (mon *Monitor) UnDelete() (prev bool) {
+	prev = mon.Deleted
+	mon.Deleted = false
+	return
+}
+
+func (mon *Monitor) ToggleDelete() (prev bool) {
+	prev = mon.Deleted
+	mon.Deleted = !mon.Deleted
+	return
+}
+
+func (mon *Monitor) Remove() (bool, error) {
+	if !mon.Deleted {
+		return false, errors.New("cannot remove a file that has not been deleted")
+	}
+	file.Remove(mon.Path())
+	return !file.FileExists(mon.Path()), nil
 }
