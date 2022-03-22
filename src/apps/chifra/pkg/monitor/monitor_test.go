@@ -35,11 +35,39 @@ func Test_Monitor(t *testing.T) {
 	}
 }
 
+func Test_Monitor_Print(t *testing.T) {
+	mon := GetTestMonitor(t)
+	defer func() {
+		RemoveTestMonitor(&mon, t)
+	}()
+
+	// Append again, expect twice as many
+	count, err := mon.AppendApps(testApps)
+	if err != nil {
+		t.Error(err)
+	}
+	if count != nTests*2 {
+		t.Error("Expected count", nTests*2, "for monitor, got:", count)
+	}
+
+	// The monitor should report that it has two appearances
+	got := fmt.Sprintln(mon.ToJSON())
+	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":6,\"fileSize\":48}\n"
+	if got != expected {
+		t.Error("Expected:", expected, "Got:", got)
+	}
+
+	got = mon.String()
+	expected = "0xf503017d7baf7fbc0fff7492b751025c6a781791\t6\t48"
+	if got != expected {
+		t.Error("Expected:", expected, "Got:", got)
+	}
+}
+
 func Test_Monitor_ReadApp(t *testing.T) {
 	mon := GetTestMonitor(t)
 	defer func() {
-		mon.Delete()
-		RemoveMonitor(&mon, t)
+		RemoveTestMonitor(&mon, t)
 	}()
 
 	var got index.AppearanceRecord
@@ -75,8 +103,7 @@ func Test_Monitor_ReadApp(t *testing.T) {
 func Test_Monitor_ReadApps(t *testing.T) {
 	mon := GetTestMonitor(t)
 	defer func() {
-		mon.Delete()
-		RemoveMonitor(&mon, t)
+		RemoveTestMonitor(&mon, t)
 	}()
 
 	if mon.Count != nTests {
@@ -99,7 +126,7 @@ func Test_Monitor_ReadApps(t *testing.T) {
 func Test_Monitor_Delete(t *testing.T) {
 	mon := GetTestMonitor(t)
 	defer func() {
-		RemoveMonitor(&mon, t)
+		RemoveTestMonitor(&mon, t)
 	}()
 
 	// The monitor should report that it has two appearances
@@ -116,11 +143,17 @@ func Test_Monitor_Delete(t *testing.T) {
 	} else {
 		t.Log("Correctly errors with:", err)
 	}
+	if !file.FileExists(mon.Path()) {
+		t.Error("Monitor file should exist")
+	}
 
 	wasDeleted := mon.ToggleDelete()
 	t.Log(mon.ToJSON())
 	if wasDeleted || !mon.Deleted {
 		t.Error("Should not have been previously deleted, but it should be deleted now")
+	}
+	if !file.FileExists(mon.Path()) {
+		t.Error("Monitor file should exist")
 	}
 
 	wasDeleted = mon.Delete()
@@ -128,11 +161,17 @@ func Test_Monitor_Delete(t *testing.T) {
 	if !wasDeleted || !mon.Deleted {
 		t.Error("Should have been previously deleted, and it should be deleted now")
 	}
+	if !file.FileExists(mon.Path()) {
+		t.Error("Monitor file should exist")
+	}
 
 	wasDeleted = mon.UnDelete()
 	t.Log(mon.ToJSON())
 	if !wasDeleted || mon.Deleted {
 		t.Error("Should have been previously deleted, but should no longer be")
+	}
+	if !file.FileExists(mon.Path()) {
+		t.Error("Monitor file should exist")
 	}
 
 	wasDeleted = mon.Delete()
@@ -140,18 +179,9 @@ func Test_Monitor_Delete(t *testing.T) {
 	if wasDeleted || !mon.Deleted {
 		t.Error("Should not have been previously deleted, but it should be deleted now")
 	}
-}
 
-func Test_Monitor_Print(t *testing.T) {
-	mon := GetTestMonitor(t)
-	defer func() {
-		mon.Delete()
-		RemoveMonitor(&mon, t)
-	}()
-
-	// The monitor should report that it has two appearances
-	got := fmt.Sprintln(mon.ToJSON())
-	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":3,\"fileSize\":24}\n"
+	got = mon.String()
+	expected = "0xf503017d7baf7fbc0fff7492b751025c6a781791\t3\t24\ttrue"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
@@ -184,8 +214,8 @@ func GetTestMonitor(t *testing.T) Monitor {
 		t.Error("Incorrect length for test data:", len(testApps), "should be ", nTests, ".")
 	}
 
-	// Append two appearances to the monitor
-	count, err := mon.Append(testApps)
+	// Append the appearances to the monitor
+	count, err := mon.AppendApps(testApps)
 	if err != nil {
 		t.Error(err)
 	}
@@ -196,15 +226,18 @@ func GetTestMonitor(t *testing.T) Monitor {
 	return mon
 }
 
-func RemoveMonitor(mon *Monitor, t *testing.T) {
+func RemoveTestMonitor(mon *Monitor, t *testing.T) {
+	// ignore the return
+	mon.Delete()
+
 	if !file.FileExists(mon.Path()) {
 		t.Error("Monitor file should exist")
 	}
 	if !mon.Deleted {
 		t.Error("Monitor should be deleted")
 	}
-	if mon.Count != nTests {
-		t.Error("Monitor should have two records, has:", mon.Count)
+	if mon.Count != nTests && mon.Count != nTests*2 {
+		t.Error("Monitor should have three or six records, has:", mon.Count)
 	}
 	removed, err := mon.Remove()
 	if !removed || err != nil {
