@@ -26,14 +26,14 @@ func ConvertEns(chain string, addrsIn []string) []string {
 				term = val.Hex()
 			}
 		}
-		out = append(out, term)
+		out = append(out, strings.ToLower(term))
 	}
 	return out
 }
 
 func ConvertOneEns(chain string, in string) string {
 	if !strings.Contains(in, ".eth") {
-		return in
+		return strings.ToLower(in)
 	}
 
 	provider := config.GetRpcProvider(chain)
@@ -42,8 +42,8 @@ func ConvertOneEns(chain string, in string) string {
 
 	val, err := ensGo.Resolve(ec, in)
 	if err == nil && len(val) > 0 {
-		return val.Hex()
+		return strings.ToLower(val.Hex())
 	}
 
-	return in
+	return strings.ToLower(in)
 }
