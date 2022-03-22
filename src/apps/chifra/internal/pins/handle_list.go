@@ -30,6 +30,7 @@ func (opts *PinsOptions) HandlePinsList() error {
 		manifestData.NewPins = manifestData.NewPins[:100]
 	}
 
+	// TODO: Fix export without arrays
 	opts.PrintManifestHeader()
 	if opts.Globals.ApiMode {
 		opts.Globals.Respond(opts.Globals.Writer, http.StatusOK, manifestData.NewPins)

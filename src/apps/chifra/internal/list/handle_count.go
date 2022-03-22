@@ -19,6 +19,7 @@ func (opts *ListOptions) HandleListCount() error {
 		result = append(result, m)
 	}
 
+	// TODO: Fix export without arrays
 	if opts.Globals.ApiMode {
 		opts.Globals.Respond(opts.Globals.Writer, http.StatusOK, result)
 
