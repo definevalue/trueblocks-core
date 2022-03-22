@@ -5,7 +5,6 @@
 package listPkg
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
