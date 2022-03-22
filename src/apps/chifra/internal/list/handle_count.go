@@ -16,7 +16,6 @@ import (
 func (opts *ListOptions) HandleListCount() error {
 	var result []monitor.Monitor
 	for _, addr := range opts.Addrs {
-		fmt.Println(addr)
 		m := monitor.NewMonitor(opts.Globals.Chain, addr)
 		result = append(result, m)
 	}
