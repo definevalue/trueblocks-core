@@ -111,7 +111,7 @@ func Freshen(chain string, monitors []monitor.Monitor) error {
 
 			mon := batches[i][j]
 			countBefore := mon.Count
-			countAfter, _ := mon.Reload(chain)
+			countAfter, _ := mon.Reload()
 
 			if countAfter > 0 {
 				if countAfter > 100000 {

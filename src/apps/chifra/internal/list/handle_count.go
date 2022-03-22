@@ -5,6 +5,7 @@
 package listPkg
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -13,9 +14,10 @@ import (
 )
 
 func (opts *ListOptions) HandleListCount() error {
-	var result []monitor.MonitorLight
+	var result []monitor.Monitor
 	for _, addr := range opts.Addrs {
-		m := monitor.NewMonitorLight(opts.Globals.Chain, addr)
+		fmt.Println(addr)
+		m := monitor.NewMonitor(opts.Globals.Chain, addr)
 		result = append(result, m)
 	}
 
