@@ -35,38 +35,64 @@ func Test_Monitor(t *testing.T) {
 	}
 }
 
-func Test_Monitor_Peek(t *testing.T) {
+func Test_Monitor_ReadApp(t *testing.T) {
 	mon := GetTestMonitor(t)
 	defer func() {
 		mon.Delete()
 		RemoveMonitor(&mon, t)
 	}()
 
-	got, err := mon.Peek(0)
+	var got index.AppearanceRecord
+	err := mon.ReadApp(0, &got)
 	if err == nil {
-		t.Error("Should have been 'index out of range in Peek[0]' error")
+		t.Error("Should have been 'index out of range in ReadApp[0]' error")
 	}
 
-	expected := index.AppearanceRecord{BlockNumber: 1001001, TransactionId: 1001001}
-	got, err = mon.Peek(1)
+	expected := index.AppearanceRecord{BlockNumber: 1001001, TransactionId: 0}
+	err = mon.ReadApp(1, &got)
 	if got != expected || err != nil {
 		t.Error("Expected:", expected, "Got:", got, err)
 	}
 
-	expected = index.AppearanceRecord{BlockNumber: 1001002, TransactionId: 1001002}
-	got, err = mon.Peek(2)
+	expected = index.AppearanceRecord{BlockNumber: 1001002, TransactionId: 1}
+	err = mon.ReadApp(2, &got)
 	if got != expected || err != nil {
 		t.Error("Expected:", expected, "Got:", got, err)
 	}
 
-	got, err = mon.Peek(mon.Count)
+	expected = index.AppearanceRecord{BlockNumber: 1001003, TransactionId: 2}
+	err = mon.ReadApp(mon.Count, &got)
 	if got != expected || err != nil {
 		t.Error("Expected:", expected, "Got:", got, err)
 	}
 
-	got, err = mon.Peek(3)
+	err = mon.ReadApp(4, &got)
 	if err == nil {
-		t.Error("Should have been 'index out of range in Peek[3]' error")
+		t.Error("Should have been 'index out of range in ReadApp[3]' error")
+	}
+}
+
+func Test_Monitor_ReadApps(t *testing.T) {
+	mon := GetTestMonitor(t)
+	defer func() {
+		mon.Delete()
+		RemoveMonitor(&mon, t)
+	}()
+
+	if mon.Count != nTests {
+		t.Error("Number of records in monitor", mon.Count, "is not as expected", nTests)
+	}
+
+	apps := make([]index.AppearanceRecord, mon.Count)
+	err := mon.ReadApps(&apps)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for i, app := range apps {
+		if testApps[i] != app {
+			t.Error("Record", i, "as read (", app, ") is not equal to testApp", testApps[i])
+		}
 	}
 }
 
@@ -78,7 +104,7 @@ func Test_Monitor_Delete(t *testing.T) {
 
 	// The monitor should report that it has two appearances
 	got := fmt.Sprintln(mon.ToJSON())
-	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":2,\"fileSize\":16}\n"
+	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":3,\"fileSize\":24}\n"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
@@ -125,7 +151,7 @@ func Test_Monitor_Print(t *testing.T) {
 
 	// The monitor should report that it has two appearances
 	got := fmt.Sprintln(mon.ToJSON())
-	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":2,\"fileSize\":16}\n"
+	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":3,\"fileSize\":24}\n"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
@@ -154,21 +180,17 @@ func GetTestMonitor(t *testing.T) Monitor {
 		t.Error("New monitor file should be empty")
 	}
 
-	apps := []index.AppearanceRecord{
-		{BlockNumber: 1001001, TransactionId: 0},
-		{BlockNumber: 1001002, TransactionId: 1},
-	}
-	if len(apps) != 2 {
-		t.Error("Incorrect length for test data:", len(apps), "should be 2.")
+	if len(testApps) != nTests {
+		t.Error("Incorrect length for test data:", len(testApps), "should be ", nTests, ".")
 	}
 
 	// Append two appearances to the monitor
-	count, err := mon.Append(apps)
+	count, err := mon.Append(testApps)
 	if err != nil {
 		t.Error(err)
 	}
-	if count != 2 {
-		t.Error("Expected count 2 for monitor, got:", count)
+	if count != nTests {
+		t.Error("Expected count", nTests, "for monitor, got:", count)
 	}
 
 	return mon
@@ -181,7 +203,7 @@ func RemoveMonitor(mon *Monitor, t *testing.T) {
 	if !mon.Deleted {
 		t.Error("Monitor should be deleted")
 	}
-	if mon.Count != 2 {
+	if mon.Count != nTests {
 		t.Error("Monitor should have two records, has:", mon.Count)
 	}
 	removed, err := mon.Remove()
@@ -191,4 +213,12 @@ func RemoveMonitor(mon *Monitor, t *testing.T) {
 	if file.FileExists(mon.Path()) {
 		t.Error("Monitor file should not exist, but it does")
 	}
+}
+
+const nTests = 3
+
+var testApps = []index.AppearanceRecord{
+	{BlockNumber: 1001001, TransactionId: 0},
+	{BlockNumber: 1001002, TransactionId: 1},
+	{BlockNumber: 1001003, TransactionId: 2},
 }

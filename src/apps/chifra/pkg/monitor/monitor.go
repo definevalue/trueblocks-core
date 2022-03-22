@@ -73,12 +73,36 @@ func (mon *Monitor) GetAddrStr() string {
 	return strings.ToLower(mon.Address.Hex())
 }
 
-// Peek returns the appearance at the index - 1. For example, ask for PeekAt(1) to get the
-// first record in the file or Peek(Count) to get the last record.
-func (mon *Monitor) Peek(idx uint32) (app index.AppearanceRecord, err error) {
+// ReadApps returns appearances starting at the first appearance in the file. Use
+// make([]index.AppearanceRecord, mon.Count) to create an array big enough
+func (mon *Monitor) ReadApps(apps *[]index.AppearanceRecord) (err error) {
+	if mon.File == nil {
+		path := mon.Path()
+		mon.File, err = os.OpenFile(path, os.O_RDONLY, 0644)
+		if err != nil {
+			return
+		}
+	}
+
+	// Caller wants record 1, which stands at location 0, etc.
+	_, err = mon.File.Seek(0, io.SeekStart)
+	if err != nil {
+		return
+	}
+
+	err = binary.Read(mon.File, binary.LittleEndian, apps)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// ReadApp returns the appearance at the index - 1. For example, ask for idx == 1 to get the
+// first record in the file or idx == Count to get the last record in the file.
+func (mon *Monitor) ReadApp(idx uint32, app *index.AppearanceRecord) (err error) {
 	if idx == 0 || idx > mon.Count {
 		// one-based index for ease in caller code
-		err = errors.New(fmt.Sprintf("index out of range in Peek[%d]", idx))
+		err = errors.New(fmt.Sprintf("index out of range in ReadApp[%d]", idx))
 		return
 	}
 
@@ -105,7 +129,7 @@ func (mon *Monitor) Peek(idx uint32) (app index.AppearanceRecord, err error) {
 	return
 }
 
-func (mon *Monitor) Append(apps []index.AppearanceRecord) (count uint32, err error) {
+func (mon *Monitor) Append(apps []index.AppearanceRecord) (count int, err error) {
 	if mon.File != nil {
 		mon.File.Close()
 		mon.File = nil
@@ -125,7 +149,7 @@ func (mon *Monitor) Append(apps []index.AppearanceRecord) (count uint32, err err
 		if err != nil {
 			return
 		}
-		binary.LittleEndian.PutUint32(b, app.BlockNumber)
+		binary.LittleEndian.PutUint32(b, app.TransactionId)
 		_, err = f.Write(b)
 		if err != nil {
 			return
@@ -133,7 +157,7 @@ func (mon *Monitor) Append(apps []index.AppearanceRecord) (count uint32, err err
 	}
 
 	mon.Reload()
-	count = mon.Count
+	count = int(mon.Count)
 
 	return
 }
