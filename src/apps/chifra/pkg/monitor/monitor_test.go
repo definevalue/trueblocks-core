@@ -116,7 +116,7 @@ func Test_Monitor_ReadApps(t *testing.T) {
 	}
 	// TODO: read the header
 
-	apps := make([]index.AppearanceRecord, 0, mon.Count)
+	apps := make([]index.AppearanceRecord, mon.Count)
 	err = mon.ReadApps(&apps)
 	if err != nil {
 		t.Error(err)
