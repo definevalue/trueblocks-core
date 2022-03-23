@@ -52,13 +52,13 @@ func Test_Monitor_Print(t *testing.T) {
 
 	// The monitor should report that it has two appearances
 	got := fmt.Sprintln(mon.ToJSON())
-	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":6,\"fileSize\":48}\n"
+	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":6,\"fileSize\":56}\n"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
 
 	got = mon.String()
-	expected = "0xf503017d7baf7fbc0fff7492b751025c6a781791\t6\t48"
+	expected = "0xf503017d7baf7fbc0fff7492b751025c6a781791\t6\t56"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
@@ -110,8 +110,14 @@ func Test_Monitor_ReadApps(t *testing.T) {
 		t.Error("Number of records in monitor", mon.Count, "is not as expected", nTests)
 	}
 
+	err := mon.ReadHeader()
+	if err != nil {
+		t.Error(err)
+	}
+	// TODO: read the header
+
 	apps := make([]index.AppearanceRecord, mon.Count)
-	err := mon.ReadApps(&apps)
+	err = mon.ReadApps(&apps)
 	if err != nil {
 		t.Error(err)
 	}
@@ -131,7 +137,7 @@ func Test_Monitor_Delete(t *testing.T) {
 
 	// The monitor should report that it has two appearances
 	got := fmt.Sprintln(mon.ToJSON())
-	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":3,\"fileSize\":24}\n"
+	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":3,\"fileSize\":32}\n"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
@@ -181,7 +187,7 @@ func Test_Monitor_Delete(t *testing.T) {
 	}
 
 	got = mon.String()
-	expected = "0xf503017d7baf7fbc0fff7492b751025c6a781791\t3\t24\ttrue"
+	expected = "0xf503017d7baf7fbc0fff7492b751025c6a781791\t3\t32\ttrue"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
