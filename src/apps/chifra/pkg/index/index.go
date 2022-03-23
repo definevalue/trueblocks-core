@@ -89,6 +89,7 @@ func (chunk *IndexChunk) Close() error {
 // ResultRecord carries the appearances found in a single IndexChunk for the given address.
 type ResultRecord struct {
 	Address    common.Address
+	Range      blockRange.FileRange
 	AppRecords *[]AppearanceRecord
 }
 
@@ -118,7 +119,7 @@ func (chunk *IndexChunk) GetAppearanceRecords(address common.Address) *ResultRec
 		return nil
 	}
 
-	return &ResultRecord{Address: address, AppRecords: &appearances}
+	return &ResultRecord{Address: address, Range: chunk.Range, AppRecords: &appearances}
 }
 
 // HeaderRecord is the first 44 bytes of an IndexChunk file. This structure carries a magic number (4 bytes),

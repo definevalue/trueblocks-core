@@ -14,7 +14,7 @@
 
 const char* STR_DELETED = "Monitor [{ADDRESS}] was deleted but not removed";
 const char* STR_UNDELETED = "Monitor [{ADDRESS}] was undeleted";
-const char* STR_REMOVED = "Monitor [{ADDRESS}] was permentantly removed";
+const char* STR_REMOVED = "Monitor [{ADDRESS}] was permanently removed";
 
 const char* STR_NOTFOUND = "Monitor [{ADDRESS}] not found";
 const char* STR_DELETEFIRST = "Monitor [{ADDRESS}] must be deleted first";

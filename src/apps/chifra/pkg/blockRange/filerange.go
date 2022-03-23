@@ -12,8 +12,8 @@ import (
 )
 
 type FileRange struct {
-	First int
-	Last  int
+	First uint64
+	Last  uint64
 }
 
 // RangeFromFilename returns a block range given a chunk filename. Format of filenames may be start-end.acct.bin (start and end are nine digit
@@ -29,11 +29,11 @@ func RangeFromFilename(path string) (blkRange FileRange, err error) {
 	parts := strings.Split(fn, "-")
 
 	if len(parts) > 1 {
-		blkRange.First, _ = strconv.Atoi(parts[0])
-		blkRange.Last, _ = strconv.Atoi(parts[1])
+		blkRange.First, _ = strconv.ParseUint(parts[0], 10, 32)
+		blkRange.Last, _ = strconv.ParseUint(parts[0], 10, 32)
 	} else {
 		blkRange.First = 0
-		blkRange.Last, _ = strconv.Atoi(parts[0])
+		blkRange.Last, _ = strconv.ParseUint(parts[0], 10, 32)
 	}
 
 	return
