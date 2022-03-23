@@ -33,6 +33,7 @@ type Monitor struct {
 	Address  common.Address `json:"address"`
 	Count    uint32         `json:"count"`
 	FileSize uint32         `json:"fileSize"`
+	Staged   bool           `json:"-"`
 	Chain    string         `json:"-"`
 	ReadFp   *os.File       `json:"-"`
 	Header
@@ -40,15 +41,26 @@ type Monitor struct {
 
 const (
 	HeaderRecordWidth = index.AppRecordWidth
-	Ext               = ".acct.bin"
+	Ext               = ".mon.bin"
 )
 
 // NewMonitor returns a Monitor (but has not yet read in the AppearanceRecords)
 func NewMonitor(chain, addr string) Monitor {
 	mon := new(Monitor)
 	mon.Header = Header{Magic: file.SmallMagicNumber}
-	mon.Address = common.HexToAddress(strings.ToLower(addr))
+	mon.Address = common.HexToAddress(addr)
 	mon.Chain = chain
+	mon.Reload()
+	return *mon
+}
+
+// NewStagedMonitor returns a Monitor whose path is in the 'staging' folder
+func NewStagedMonitor(chain, addr string) Monitor {
+	mon := new(Monitor)
+	mon.Header = Header{Magic: file.SmallMagicNumber}
+	mon.Address = common.HexToAddress(addr)
+	mon.Chain = chain
+	mon.Staged = true
 	mon.Reload()
 	return *mon
 }
@@ -73,22 +85,25 @@ func (mon Monitor) ToJSON() string {
 
 // Path returns the path to the Monitor file
 func (mon *Monitor) Path() (path string) {
-	path = config.GetPathToCache(mon.Chain) + "monitors/" + strings.ToLower(mon.Address.Hex()) + Ext
+	if mon.Staged {
+		path = config.GetPathToCache(mon.Chain) + "monitors/staging/" + strings.ToLower(mon.Address.Hex()) + Ext
+	} else {
+		path = config.GetPathToCache(mon.Chain) + "monitors/" + strings.ToLower(mon.Address.Hex()) + Ext
+	}
 	return
 }
 
 // Reload loads information about the monitor such as the file's size and record count
 func (mon *Monitor) Reload() (uint32, error) {
-	path := mon.Path()
-	if !file.FileExists(path) {
+	if !file.FileExists(mon.Path()) {
 		// Make sure the file exists since we've been told to monitor it
 		err := mon.WriteHeader(false, 0)
 		if err != nil {
 			return 0, err
 		}
 	}
-	mon.FileSize = uint32(file.FileSize(path))
-	mon.Count = uint32(file.FileSize(path)/HeaderRecordWidth) - 1
+	mon.FileSize = uint32(file.FileSize(mon.Path()))
+	mon.Count = uint32(file.FileSize(mon.Path())/HeaderRecordWidth) - 1
 	return mon.Count, nil
 }
 
@@ -165,8 +180,7 @@ func (mon *Monitor) ReadApp(idx uint32, app *index.AppearanceRecord) (err error)
 	return
 }
 
-// ReadApps returns appearances starting at the first appearance in the file. Use
-// make([]index.AppearanceRecord, mon.Count) to create an array big enough
+// ReadApps returns appearances starting at the first appearance in the file.
 func (mon *Monitor) ReadApps(apps *[]index.AppearanceRecord) (err error) {
 	if mon.ReadFp == nil {
 		path := mon.Path()
@@ -189,32 +203,45 @@ func (mon *Monitor) ReadApps(apps *[]index.AppearanceRecord) (err error) {
 	return
 }
 
-// AppendApps appends an array of appearances to a Monitor file
-func (mon *Monitor) AppendApps(apps []index.AppearanceRecord) (count int, err error) {
+// WriteApps writes appearances to a Monitor and updates lastScanned
+func (mon *Monitor) WriteApps(apps []index.AppearanceRecord, lastScanned uint32) (count int, err error) {
 	// close the reader if it's open
 	mon.Close()
 
+	// Order matters
+	mon.WriteHeader(mon.Deleted, lastScanned)
+
+	mode := os.O_WRONLY | os.O_CREATE
+	if file.FileExists(mon.Path()) {
+		// log.Println("Appending to existing monitor", mon.GetAddrStr())
+		mode = os.O_WRONLY | os.O_APPEND
+	}
+
 	path := mon.Path()
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0644)
+	f, err := os.OpenFile(path, mode, 0644)
 	if err != nil {
 		return
 	}
-	defer f.Close()
 
-	b := make([]byte, 4)
+	f.Seek(HeaderRecordWidth, io.SeekStart)
+
+	b := make([]byte, 4, 4)
 	for _, app := range apps {
 		binary.LittleEndian.PutUint32(b, app.BlockNumber)
 		_, err = f.Write(b)
 		if err != nil {
+			f.Close()
 			return
 		}
 		binary.LittleEndian.PutUint32(b, app.TransactionId)
 		_, err = f.Write(b)
 		if err != nil {
+			f.Close()
 			return
 		}
 	}
 
+	f.Close() // do not defer this, we need to close it so the fileSize is right
 	mon.Reload()
 	count = int(mon.Count)
 
@@ -249,4 +276,13 @@ func (mon *Monitor) Remove() (bool, error) {
 	}
 	file.Remove(mon.Path())
 	return !file.FileExists(mon.Path()), nil
+}
+
+func (mon *Monitor) MoveToProduction() error {
+	if !mon.Staged {
+		return errors.New("trying to move monitor that is not staged")
+	}
+	oldpath := mon.Path()
+	mon.Staged = false
+	return os.Rename(oldpath, mon.Path())
 }

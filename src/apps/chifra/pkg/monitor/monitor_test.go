@@ -30,7 +30,7 @@ func Test_Monitor(t *testing.T) {
 		t.Error("Filename should be lower case: ", fileName)
 	}
 
-	if strings.ToLower(testAddr+".acct.bin") != fileName {
+	if strings.ToLower(testAddr)+Ext != fileName {
 		t.Error("Unexpected filename: ", fileName)
 	}
 }
@@ -42,7 +42,7 @@ func Test_Monitor_Print(t *testing.T) {
 	}()
 
 	// Append again, expect twice as many
-	count, err := mon.AppendApps(testApps)
+	count, err := mon.WriteApps(testApps, 2002002)
 	if err != nil {
 		t.Error(err)
 	}
@@ -52,7 +52,7 @@ func Test_Monitor_Print(t *testing.T) {
 
 	// The monitor should report that it has two appearances
 	got := fmt.Sprintln(mon.ToJSON())
-	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":6,\"fileSize\":56}\n"
+	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":6,\"fileSize\":56,\"lastScanned\":2002002}\n"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
@@ -116,7 +116,7 @@ func Test_Monitor_ReadApps(t *testing.T) {
 	}
 	// TODO: read the header
 
-	apps := make([]index.AppearanceRecord, mon.Count)
+	apps := make([]index.AppearanceRecord, 0, mon.Count)
 	err = mon.ReadApps(&apps)
 	if err != nil {
 		t.Error(err)
@@ -137,7 +137,7 @@ func Test_Monitor_Delete(t *testing.T) {
 
 	// The monitor should report that it has two appearances
 	got := fmt.Sprintln(mon.ToJSON())
-	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":3,\"fileSize\":32}\n"
+	expected := "{\"address\":\"0xf503017d7baf7fbc0fff7492b751025c6a781791\",\"count\":3,\"fileSize\":32,\"lastScanned\":2002002}\n"
 	if got != expected {
 		t.Error("Expected:", expected, "Got:", got)
 	}
@@ -221,7 +221,7 @@ func GetTestMonitor(t *testing.T) Monitor {
 	}
 
 	// Append the appearances to the monitor
-	count, err := mon.AppendApps(testApps)
+	count, err := mon.WriteApps(testApps, 2002002)
 	if err != nil {
 		t.Error(err)
 	}

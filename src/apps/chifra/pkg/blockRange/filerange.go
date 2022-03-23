@@ -12,6 +12,7 @@ import (
 )
 
 type FileRange struct {
+	// TODO: BOGUS I don't like using uint64s everywhere
 	First uint64
 	Last  uint64
 }
