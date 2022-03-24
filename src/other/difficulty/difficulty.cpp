@@ -12,13 +12,13 @@
  *-------------------------------------------------------------------------------------------*/
 #include "etherlib.h"
 
-#include "etherlib.h"
+// NOTE -- REMOVE SLEEP ONCE WE GO BACK TO USING ERIGON
 
-#define START 14405940
-#define END 14418230
+#define START 14418230
+#define END 14449568
 
 int main(int argc, const char* argv[]) {
-    loadEnvironmentPaths();
+    loadEnvironmentPaths("mainnet", "/Users/jrush/Development/trueblocks-core/build/shit/");
     etherlib_init(quickQuitHandler);
     for (size_t i = START; i < END; i++) {
         CBlock block;
@@ -26,6 +26,7 @@ int main(int argc, const char* argv[]) {
         cout << block.blockNumber << "," << block.timestamp << "," << block.difficulty << endl;
         cerr << block.blockNumber << " " << (END - block.blockNumber) << "     \r";
         cerr.flush();
+        usleep(200000);
     }
     return 0;
 }
