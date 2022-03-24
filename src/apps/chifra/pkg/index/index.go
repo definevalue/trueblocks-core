@@ -1,26 +1,14 @@
 package index
 
 import (
-	"bytes"
-	"encoding/binary"
-	"fmt"
-	"io"
-	"log"
 	"os"
-	"sort"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
 	// HeaderWidth - size of Header Record
 	HeaderWidth = 44
-	// AddrRecordWidth - size of Address Record
-	AddrRecordWidth = 28
-	// AppRecordWidth - size of Appearance Record
-	AppRecordWidth = 8
 )
 
 // IndexChunk represents a consolidated portion of the Index of All Appearances (called a Chunk). The name
@@ -44,9 +32,9 @@ const (
 type IndexChunk struct {
 	File           *os.File
 	Header         HeaderRecord
+	Range          blockRange.FileRange
 	AddrTableStart int64
 	AppTableStart  int64
-	Range          blockRange.FileRange
 }
 
 // LoadIndexHeader returns an IndexChunk with an opened file pointer to the given fileName. The HeaderRecord
@@ -84,137 +72,4 @@ func (chunk *IndexChunk) Close() error {
 		chunk.File.Close()
 	}
 	return nil
-}
-
-// ResultRecord carries the appearances found in a single IndexChunk for the given address.
-type ResultRecord struct {
-	Address    common.Address
-	Range      blockRange.FileRange
-	AppRecords *[]AppearanceRecord
-}
-
-// GetAppearanceRecords searches an already-opened IndexChunk for the given address. Returns a ResultRecord or nil
-func (chunk *IndexChunk) GetAppearanceRecords(address common.Address) *ResultRecord {
-	foundAt := chunk.searchForAddressRecord(address)
-	if foundAt == -1 {
-		return nil
-	}
-
-	startOfAddressRecord := int64(HeaderWidth + (foundAt * AddrRecordWidth))
-	_, err := chunk.File.Seek(startOfAddressRecord, io.SeekStart)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-
-	addressRecord, err := chunk.readAddressRecord()
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-
-	appearances, err := chunk.readAppearanceRecords(&addressRecord)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-
-	return &ResultRecord{Address: address, Range: chunk.Range, AppRecords: &appearances}
-}
-
-// HeaderRecord is the first 44 bytes of an IndexChunk file. This structure carries a magic number (4 bytes),
-// a version specifier (32 bytes), and two four-byte integers representing the number of records in each
-// of the two tables.
-type HeaderRecord struct {
-	Magic           uint32
-	Hash            common.Hash
-	AddressCount    uint32
-	AppearanceCount uint32
-}
-
-func readHeader(fl *os.File) (header HeaderRecord, err error) {
-	err = binary.Read(fl, binary.LittleEndian, &header)
-	if err != nil {
-		return
-	}
-
-	if header.Magic != file.MagicNumber {
-		return header, fmt.Errorf("magic number in file %s is incorrect, expected %d, got %d", fl.Name(), file.MagicNumber, header.Magic)
-	}
-
-	return
-}
-
-// AddressRecord is a single record in the Address table
-type AddressRecord struct {
-	Address common.Address
-	Offset  uint32
-	Count   uint32
-}
-
-func (chunk *IndexChunk) readAddressRecord() (addressRec AddressRecord, err error) {
-	err = binary.Read(chunk.File, binary.LittleEndian, &addressRec)
-	return
-}
-
-func (chunk *IndexChunk) searchForAddressRecord(address common.Address) int {
-	compareFunc := func(pos int) bool {
-		if pos == -1 {
-			return false
-		}
-
-		if pos == int(chunk.Header.AddressCount) {
-			return true
-		}
-
-		readLocation := int64(HeaderWidth + pos*AddrRecordWidth)
-		_, err := chunk.File.Seek(readLocation, io.SeekStart)
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		addressRec, err := chunk.readAddressRecord()
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		return bytes.Compare(addressRec.Address[:], address[:]) >= 0
-	}
-
-	pos := sort.Search(int(chunk.Header.AddressCount), compareFunc)
-
-	readLocation := int64(HeaderWidth + pos*AddrRecordWidth)
-	chunk.File.Seek(readLocation, io.SeekStart)
-	rec, err := chunk.readAddressRecord()
-	if err != nil {
-		return -1
-	}
-
-	if bytes.Compare(rec.Address[:], address[:]) != 0 {
-		return -1
-	}
-
-	return pos
-}
-
-// AppearanceRecord is a single record in the Appearance table
-type AppearanceRecord struct {
-	BlockNumber   uint32 `json:"blockNumber"`
-	TransactionId uint32 `json:"transactionIndex"`
-}
-
-func (chunk *IndexChunk) readAppearanceRecords(addrRecord *AddressRecord) (apps []AppearanceRecord, err error) {
-	readLocation := int64(HeaderWidth + AddrRecordWidth*chunk.Header.AddressCount + AppRecordWidth*addrRecord.Offset)
-
-	_, err = chunk.File.Seek(readLocation, io.SeekStart)
-	if err != nil {
-		return
-	}
-
-	apps = make([]AppearanceRecord, addrRecord.Count)
-	err = binary.Read(chunk.File, binary.LittleEndian, &apps)
-
-	return
 }
