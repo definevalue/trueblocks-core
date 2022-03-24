@@ -44,13 +44,14 @@ const (
 	Ext               = ".mon.bin"
 )
 
-// NewMonitor returns a Monitor (but has not yet read in the AppearanceRecords)
-func NewMonitor(chain, addr string) Monitor {
+// NewMonitor returns a Monitor (but has not yet read in the AppearanceRecords). If 'create' is
+// sent, create the Monitor if it does not already exist
+func NewMonitor(chain, addr string, create bool) Monitor {
 	mon := new(Monitor)
 	mon.Header = Header{Magic: file.SmallMagicNumber}
 	mon.Address = common.HexToAddress(addr)
 	mon.Chain = chain
-	mon.Reload()
+	mon.Reload(create)
 	return *mon
 }
 
@@ -61,7 +62,7 @@ func NewStagedMonitor(chain, addr string) Monitor {
 	mon.Address = common.HexToAddress(addr)
 	mon.Chain = chain
 	mon.Staged = true
-	mon.Reload()
+	mon.Reload(true)
 	return *mon
 }
 
@@ -94,8 +95,8 @@ func (mon *Monitor) Path() (path string) {
 }
 
 // Reload loads information about the monitor such as the file's size and record count
-func (mon *Monitor) Reload() (uint32, error) {
-	if !file.FileExists(mon.Path()) {
+func (mon *Monitor) Reload(create bool) (uint32, error) {
+	if create && !file.FileExists(mon.Path()) {
 		// Make sure the file exists since we've been told to monitor it
 		err := mon.WriteHeader(false, 0)
 		if err != nil {
@@ -128,8 +129,10 @@ func (mon *Monitor) ReadHeader() (err error) {
 			return
 		}
 	}
-	mon.Header = Header{Magic: file.SmallMagicNumber}
-	mon.ReadFp.Seek(index.AppRecordWidth, io.SeekStart)
+	err = binary.Read(mon.ReadFp, binary.LittleEndian, &mon.Header)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -242,7 +245,7 @@ func (mon *Monitor) WriteApps(apps []index.AppearanceRecord, lastScanned uint32)
 	}
 
 	f.Close() // do not defer this, we need to close it so the fileSize is right
-	mon.Reload()
+	mon.Reload(false /* create */)
 	count = int(mon.Count)
 
 	return
@@ -252,28 +255,52 @@ func (mon *Monitor) WriteApps(apps []index.AppearanceRecord, lastScanned uint32)
 func (mon *Monitor) Delete() (prev bool) {
 	prev = mon.Deleted
 	mon.WriteHeader(true, mon.LastScanned)
+	// TODO: BOGUS
+    oldDelFile := strings.Replace(mon.Path(), Ext, ".acct.bin", -1) + ".deleted"
+	file.Touch(oldDelFile)
 	return
+}
+
+// IsDeleted returns true if the monitor has been deleted but not removed
+func (mon *Monitor) IsDeleted() bool {
+	mon.ReadHeader()
+	return mon.Header.Deleted
 }
 
 // UnDelete unmarks the file's delete flag
 func (mon *Monitor) UnDelete() (prev bool) {
 	prev = mon.Deleted
 	mon.WriteHeader(false, mon.LastScanned)
+	// TODO: BOGUS
+	oldDelFile := strings.Replace(mon.Path(), Ext, ".acct.bin", -1) + ".deleted"
+	file.Remove(oldDelFile)
 	return
 }
 
 // ToggleDelete toggles the file's delete flag
 func (mon *Monitor) ToggleDelete() (prev bool) {
 	prev = mon.Deleted
-	mon.WriteHeader(!mon.Deleted, mon.LastScanned)
+	if mon.Deleted {
+		mon.UnDelete()
+	} else {
+		mon.Delete()
+	}
 	return
 }
 
 // Remove removes a previously deleted file, does nothing if the file is not deleted
 func (mon *Monitor) Remove() (bool, error) {
-	if !mon.Deleted {
+	// TODO: BOGUS
+	oldAcctFile := strings.Replace(mon.Path(), Ext, ".acct.bin", -1)
+	oldCntFile := strings.Replace(mon.Path(), Ext, ".last.txt", -1)
+	oldDelFile := strings.Replace(mon.Path(), Ext, ".acct.bin", -1) + ".deleted"
+	exists := file.FileExists(oldDelFile)
+	if !mon.Deleted && !exists {
 		return false, errors.New("cannot remove a file that has not been deleted")
 	}
+	file.Remove(oldAcctFile)
+	file.Remove(oldCntFile)
+	file.Remove(oldDelFile)
 	file.Remove(mon.Path())
 	return !file.FileExists(mon.Path()), nil
 }

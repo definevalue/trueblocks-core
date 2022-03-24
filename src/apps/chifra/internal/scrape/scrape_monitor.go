@@ -112,7 +112,7 @@ func Freshen(chain string, monitors []monitor.Monitor) error {
 
 			mon := batches[i][j]
 			countBefore := mon.Count
-			countAfter, _ := mon.Reload()
+			countAfter, _ := mon.Reload(true /* create */)
 
 			if countAfter > 0 {
 				if countAfter > 100000 {
@@ -186,7 +186,7 @@ func getMonitors(chain, folder string, monitorChan chan<- monitor.Monitor) {
 			if !strings.HasPrefix(line, "#") {
 				parts := strings.Split(line, ",")
 				if len(parts) > 0 && validate.IsValidAddress(parts[0]) && !validate.IsZeroAddress(parts[0]) {
-					monitorChan <- monitor.NewMonitor(chain, parts[0])
+					monitorChan <- monitor.NewMonitor(chain, parts[0], true /* create */)
 				}
 			}
 		}
@@ -202,7 +202,7 @@ func getMonitors(chain, folder string, monitorChan chan<- monitor.Monitor) {
 		if !info.IsDir() {
 			addr, _ := fn_2_Addr(path)
 			if len(addr) > 0 {
-				monitorChan <- monitor.NewMonitor(chain, addr)
+				monitorChan <- monitor.NewMonitor(chain, addr, true /* create */)
 			}
 		}
 		return nil

@@ -100,7 +100,6 @@ class COptions : public CAbiOptions {
     bool handle_traversers(void);
 
     bool process_clean(void);
-    bool process_rm(const CAddressArray& addrs);
     bool process_freshen(void);
 
     bool visitBinaryFile(const string_q& path, void* data);

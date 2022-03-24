@@ -12,7 +12,23 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
 )
 
-func (opts *ListOptions) HandleListCount(results []monitor.Monitor) error {
+type SimpleMonitor struct {
+	Address  string `json:"address"`
+	NRecords uint32 `json:"nRecords"`
+	FileSize uint32 `json:"fileSize"`
+}
+
+func (opts *ListOptions) HandleListCount(monitorArray []monitor.Monitor) error {
+	results := make([]SimpleMonitor, 0, len(monitorArray))
+	for _, mon := range monitorArray {
+		var m SimpleMonitor
+		m.Address = mon.GetAddrStr()
+		m.NRecords = mon.Count
+		m.FileSize = mon.FileSize
+		results = append(results, m)
+
+	}
+
 	// TODO: Fix export without arrays
 	if opts.Globals.ApiMode {
 		opts.Globals.Respond(opts.Globals.Writer, http.StatusOK, results)

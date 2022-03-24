@@ -9,15 +9,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"sync"
 
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/colors"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/config"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/index"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/utils"
+	"github.com/ethereum/go-ethereum/common"
 )
 
-func (optsEx *MonitorUpdate) HandleFreshenMonitors() error {
-	chain := optsEx.Globals.Chain
+func (opts *ListOptions) HandleFreshenMonitors(monitorArray *[]monitor.Monitor) error {
+	var updater MonitorUpdate
+	updater.writer = os.Stdout
+	updater.maxTasks = 12
+	updater.monitorMap = make(AddressMonitorMap, len(opts.Addrs))
+	updater.Range = blockRange.FileRange{First: 0, Last: utils.NOPOS}
+	updater.Globals = opts.Globals
+	for _, addr := range opts.Addrs {
+		if updater.monitorMap[common.HexToAddress(addr)] == nil {
+			m := monitor.NewStagedMonitor(updater.Globals.Chain, addr)
+			*monitorArray = append(*monitorArray, m)
+			updater.monitorMap[m.Address] = &(*monitorArray)[len(*monitorArray)-1]
+		}
+	}
+
+	chain := updater.Globals.Chain
 	indexPath := config.GetPathToIndex(chain) + "finalized/"
 	files, err := ioutil.ReadDir(indexPath)
 	if err != nil {
@@ -30,17 +49,17 @@ func (optsEx *MonitorUpdate) HandleFreshenMonitors() error {
 	taskCount := 0
 	for _, info := range files {
 		if !info.IsDir() {
-			if taskCount >= optsEx.maxTasks {
+			if taskCount >= updater.maxTasks {
 				resArray := <-resultChannel
 				for _, r := range resArray {
-					optsEx.UpdateMonitors(&r)
+					updater.UpdateMonitors(&r)
 				}
 				taskCount--
 			}
 			taskCount++
 			indexFileName := indexPath + "/" + info.Name()
 			wg.Add(1)
-			go optsEx.visitChunkToFreshenFinal(indexFileName, resultChannel, &wg)
+			go updater.visitChunkToFreshenFinal(indexFileName, resultChannel, &wg)
 		}
 	}
 
@@ -49,16 +68,16 @@ func (optsEx *MonitorUpdate) HandleFreshenMonitors() error {
 
 	for resArray := range resultChannel {
 		for _, r := range resArray {
-			optsEx.UpdateMonitors(&r)
+			updater.UpdateMonitors(&r)
 		}
 	}
 
-	return nil
+	return updater.MoveAllToProduction()
 }
 
 // visitChunkToFreshenFinal opens one index file, searches for all the address(es) we're looking for and pushes the resultRecords
 // (even if empty) down the resultsChannel.
-func (optsEx *MonitorUpdate) visitChunkToFreshenFinal(fileName string, resultChannel chan<- []index.ResultRecord, wg *sync.WaitGroup) {
+func (updater *MonitorUpdate) visitChunkToFreshenFinal(fileName string, resultChannel chan<- []index.ResultRecord, wg *sync.WaitGroup) {
 	var results []index.ResultRecord
 	defer func() {
 		wg.Done()
@@ -72,15 +91,15 @@ func (optsEx *MonitorUpdate) visitChunkToFreshenFinal(fileName string, resultCha
 	}
 	defer indexChunk.Close()
 
-	if optsEx.Globals.TestMode && indexChunk.Range.Last > 5000000 {
+	if updater.Globals.TestMode && indexChunk.Range.Last > 5000000 {
 		return
 	}
 
-	if !optsEx.RangesIntersect(indexChunk.Range) {
+	if !RangesIntersect(updater.Range, indexChunk.Range) {
 		return
 	}
 
-	for _, mon := range optsEx.monMap {
+	for _, mon := range updater.monitorMap {
 		rec := indexChunk.GetAppearanceRecords(mon.Address)
 		if rec != nil {
 			results = append(results, *rec)
@@ -95,8 +114,8 @@ func (optsEx *MonitorUpdate) visitChunkToFreshenFinal(fileName string, resultCha
 
 // UpdateMonitors writes an array of appearances to the Monitor file updating the header for lastScanned. It
 // is called by 'chifra list' and 'chifra export' prior to reporting results
-func (optsEx *MonitorUpdate) UpdateMonitors(result *index.ResultRecord) {
-	mon := optsEx.monMap[result.Address]
+func (updater *MonitorUpdate) UpdateMonitors(result *index.ResultRecord) {
+	mon := updater.monitorMap[result.Address]
 	if result == nil {
 		fmt.Println("Should not happen -- null result")
 		return
@@ -110,19 +129,18 @@ func (optsEx *MonitorUpdate) UpdateMonitors(result *index.ResultRecord) {
 	_, err := mon.WriteApps(*result.AppRecords, uint32(result.Range.Last))
 	if err != nil {
 		log.Println(err)
-	} else {
+	} else if !updater.Globals.TestMode {
 		bBlue := (colors.Bright + colors.Blue)
 		log.Printf("Found %s%s%s adding appearances (count: %d)\n", bBlue, mon.GetAddrStr(), colors.Off, len(*result.AppRecords))
 	}
-	// theWriter := csv.NewWriter(opts Ex.writer)
-	// theWriter.Comma = 0x9
-	// var out [][]string
-	// for _, app := range *result.AppRecords {
-	// 	out = append(out, []string{strings.ToLower(result.Address.Hex()), fmt.Sprintf("%d", app.BlockNumber), fmt.Sprintf("%d", app.TransactionId)})
-	// }
-	// theWriter.WriteAll(out)
-	// if err := theWriter.Error(); err != nil {
-	// 	// TODO: BOGUS
-	// 	log.Fatal("F", err)
-	// }
+}
+
+func (updater *MonitorUpdate) MoveAllToProduction() error {
+	for _, mon := range updater.monitorMap {
+		err := mon.MoveToProduction()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

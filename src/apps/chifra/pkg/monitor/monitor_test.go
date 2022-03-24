@@ -18,7 +18,7 @@ import (
 func Test_Monitor(t *testing.T) {
 	testAddr := "0xF503017d7bAf7fbc0fff7492b751025c6a78179b"
 
-	mon := NewMonitor("mainnet", testAddr)
+	mon := NewMonitor("mainnet", testAddr, true /* create */)
 	path := mon.Path()
 	dir, fileName := filepath.Split(path)
 
@@ -196,7 +196,7 @@ func Test_Monitor_Delete(t *testing.T) {
 func GetTestMonitor(t *testing.T) Monitor {
 	// Create a new, empty monitor
 	testAddr := "0xF503017d7bAf7fbc0fff7492b751025c6a781791"
-	mon := NewMonitor("mainnet", testAddr)
+	mon := NewMonitor("mainnet", testAddr, true /* create */)
 
 	if mon.Address != common.HexToAddress(testAddr) {
 		t.Error("Expected:", common.HexToAddress(testAddr), "Got:", mon.Address)

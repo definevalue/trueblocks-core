@@ -283,10 +283,6 @@ bool COptions::parseArguments(string_q& command) {
         return false;
     }
 
-    // Handle the easy cases first...
-    if (isCrudCommand())
-        return process_rm(addrs);
-
     if (accounting && !isArchiveNode())
         return usage("The --accounting option requires historical balances which your RPC server does not provide.");
 

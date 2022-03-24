@@ -65,12 +65,7 @@ class CMonitor : public CAccountName {
     void writeNextBlockToVisit(blknum_t bn, bool staging);
     bool removeDuplicates(const string_q& path);
     void moveToProduction(bool staging);
-
-    bool monitorExists(void) const;
     bool isDeleted(void) const;
-    void deleteMonitor(void);
-    void undeleteMonitor(void);
-    void removeMonitor(void);
 
     blknum_t loadAppearances(MONAPPFUNC func, void* data);
     blknum_t getNextBlockToVisit(bool ifExists) const;
