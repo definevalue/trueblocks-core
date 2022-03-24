@@ -32,7 +32,7 @@ bool visitBlock(CBlock& block, void* data) {
 
 //----------------------------------------------------------------
 int main(int argc, const char* argv[]) {
-    loadEnvironmentPaths();
+    loadEnvironmentPaths("", "");
 
     etherlib_init(quickQuitHandler);
 

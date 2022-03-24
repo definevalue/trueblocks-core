@@ -18,7 +18,7 @@
  *          Simply request a block from Infura and print it to the screen.
  *------------------------------------------------------------------------*/
 int main(int argc, const char* argv[]) {
-    loadEnvironmentPaths();
+    loadEnvironmentPaths("", "");
 
     // Initialize the TrueBlocks system
     etherlib_init(quickQuitHandler);
