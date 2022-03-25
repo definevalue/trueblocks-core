@@ -49,9 +49,11 @@ func LoadIndexHeader(fileName string) (IndexChunk, error) {
 	if err != nil {
 		return IndexChunk{}, err
 	}
+	// Note, we don't defer closing here since we want the file to stay opened.
 
 	header, err := readHeader(file)
 	if err != nil {
+		file.Close()
 		return IndexChunk{}, err
 	}
 

@@ -193,7 +193,7 @@ func (mon *Monitor) ReadApps(apps *[]index.AppearanceRecord) (err error) {
 		}
 	}
 
-	// Caller wants record 1, which stands at location 0, etc.
+	// Seek past the header to get to the first record
 	_, err = mon.ReadFp.Seek(HeaderRecordWidth, io.SeekStart)
 	if err != nil {
 		return
@@ -256,7 +256,7 @@ func (mon *Monitor) Delete() (prev bool) {
 	prev = mon.Deleted
 	mon.WriteHeader(true, mon.LastScanned)
 	// TODO: BOGUS
-    oldDelFile := strings.Replace(mon.Path(), Ext, ".acct.bin", -1) + ".deleted"
+	oldDelFile := strings.Replace(mon.Path(), Ext, ".acct.bin", -1) + ".deleted"
 	file.Touch(oldDelFile)
 	return
 }

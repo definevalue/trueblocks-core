@@ -20,18 +20,17 @@ type FileRange struct {
 // RangeFromFilename returns a block range given a chunk filename. Format of filenames may be start-end.acct.bin (start and end are nine digit
 // and zero-padded to the left) or start.txt
 func RangeFromFilename(path string) (blkRange FileRange, err error) {
-	if !strings.Contains(path, ".") {
-		return blkRange, errors.New("invalid filename")
-	}
 	_, fn := filepath.Split(path)
-	if strings.Contains(fn, ".") {
-		fn = strings.Split(fn, ".")[0]
+	if !strings.Contains(fn, ".") {
+		return blkRange, errors.New("invalid path:" + path)
 	}
-	parts := strings.Split(fn, "-")
 
+	fn = strings.Split(fn, ".")[0]
+
+	parts := strings.Split(fn, "-")
 	if len(parts) > 1 {
 		blkRange.First, _ = strconv.ParseUint(parts[0], 10, 32)
-		blkRange.Last, _ = strconv.ParseUint(parts[0], 10, 32)
+		blkRange.Last, _ = strconv.ParseUint(parts[1], 10, 32)
 	} else {
 		blkRange.First = 0
 		blkRange.Last, _ = strconv.ParseUint(parts[0], 10, 32)

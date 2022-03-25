@@ -25,7 +25,7 @@ func (opts *ListOptions) HandleListAppearances(monitorArray []monitor.Monitor) e
 	// theWriter := csv.NewWriter(os.Stdout)
 	// theWriter.Comma = 0x9
 	for _, mon := range monitorArray {
-		apps := make([]index.AppearanceRecord, mon.Count)
+		apps := make([]index.AppearanceRecord, 0, mon.Count)
 		err := mon.ReadApps(&apps)
 		if err != nil {
 			return err

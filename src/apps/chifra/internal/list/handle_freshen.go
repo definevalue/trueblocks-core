@@ -17,7 +17,6 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/config"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/index"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -26,7 +25,7 @@ func (opts *ListOptions) HandleFreshenMonitors(monitorArray *[]monitor.Monitor) 
 	updater.writer = os.Stdout
 	updater.maxTasks = 12
 	updater.monitorMap = make(AddressMonitorMap, len(opts.Addrs))
-	updater.Range = blockRange.FileRange{First: 0, Last: utils.NOPOS}
+	updater.Range = blockRange.FileRange{First: opts.FirstBlock, Last: opts.LastBlock}
 	updater.Globals = opts.Globals
 	for _, addr := range opts.Addrs {
 		if updater.monitorMap[common.HexToAddress(addr)] == nil {
@@ -49,6 +48,22 @@ func (opts *ListOptions) HandleFreshenMonitors(monitorArray *[]monitor.Monitor) 
 	taskCount := 0
 	for _, info := range files {
 		if !info.IsDir() {
+			indexFileName := indexPath + "/" + info.Name()
+			fileRange, err := blockRange.RangeFromFilename(indexFileName)
+			if err != nil {
+				// don't respond further -- there may be foreign files in the folder
+				fmt.Println(err)
+				continue
+			}
+
+			if updater.Globals.TestMode && fileRange.Last > 5000000 {
+				continue
+			}
+
+			if !RangesIntersect(updater.Range, fileRange) {
+				continue
+			}
+
 			if taskCount >= updater.maxTasks {
 				resArray := <-resultChannel
 				for _, r := range resArray {
@@ -57,7 +72,6 @@ func (opts *ListOptions) HandleFreshenMonitors(monitorArray *[]monitor.Monitor) 
 				taskCount--
 			}
 			taskCount++
-			indexFileName := indexPath + "/" + info.Name()
 			wg.Add(1)
 			go updater.visitChunkToFreshenFinal(indexFileName, resultChannel, &wg)
 		}
@@ -90,14 +104,6 @@ func (updater *MonitorUpdate) visitChunkToFreshenFinal(fileName string, resultCh
 		return
 	}
 	defer indexChunk.Close()
-
-	if updater.Globals.TestMode && indexChunk.Range.Last > 5000000 {
-		return
-	}
-
-	if !RangesIntersect(updater.Range, indexChunk.Range) {
-		return
-	}
 
 	for _, mon := range updater.monitorMap {
 		rec := indexChunk.GetAppearanceRecords(mon.Address)
