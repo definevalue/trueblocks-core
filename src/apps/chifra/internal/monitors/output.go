@@ -10,12 +10,13 @@ package monitorsPkg
 
 // EXISTING_CODE
 import (
-	"fmt"
-	"log"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/validate"
 	"github.com/spf13/cobra"
@@ -32,7 +33,7 @@ func RunMonitors(cmd *cobra.Command, args []string) error {
 	}
 
 	// EXISTING_CODE
-	if opts.HandleCrudCommands() {
+	if opts.HandleCrudCommands(os.Stdout) {
 		return nil
 	}
 	return opts.Globals.PassItOn("acctExport", opts.ToCmdLine())
@@ -66,12 +67,12 @@ func ServeMonitors(w http.ResponseWriter, r *http.Request) bool {
 			return true
 		}
 	}
-	return opts.HandleCrudCommands()
+	return opts.HandleCrudCommands(w)
 	// EXISTING_CODE
 }
 
 // EXISTING_CODE
-func (opts *MonitorsOptions) HandleCrudCommands() bool {
+func (opts *MonitorsOptions) HandleCrudCommands(w io.Writer) bool {
 	if !(opts.Delete || opts.Undelete || opts.Remove) {
 		return false
 	}
@@ -79,24 +80,29 @@ func (opts *MonitorsOptions) HandleCrudCommands() bool {
 	for _, addr := range opts.Addrs {
 		m := monitor.NewMonitor(opts.Globals.Chain, addr, false)
 		if !file.FileExists(m.Path()) {
-			fmt.Println("Monitor not found for address", m.GetAddrStr())
+			msg := "Monitor not found for address " + addr + "."
+			logger.Log(logger.Info, msg)
 			return true
 		} else {
 			if opts.Delete {
 				m.Delete()
-				fmt.Println("Monitor", m.GetAddrStr(), "was deleted but not removed.")
+				msg := "Monitor " + addr + " was deleted but not removed."
+				logger.Log(logger.Info, msg)
 			} else if opts.Undelete {
 				m.UnDelete()
-				fmt.Println("Monitor", m.GetAddrStr(), "was undeleted.")
+				msg := "Monitor " + addr + " was undeleted."
+				logger.Log(logger.Info, msg)
 			}
 
 			if opts.Remove {
 				wasRemoved, err := m.Remove()
 				if !wasRemoved || err != nil {
-					log.Println("Monitor for ", addr, "was not removed:", err)
+					msg := "Monitor for " + addr + " was not  removed. " + err.Error()
+					logger.Log(logger.Info, msg)
 					return true
 				} else {
-					fmt.Println("Monitor for ", addr, "was permanently removed.")
+					msg := "Monitor for " + addr + " was permanently removed."
+					logger.Log(logger.Info, msg)
 				}
 			}
 		}
