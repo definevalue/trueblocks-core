@@ -5,7 +5,7 @@ on      ,both ,fast  ,chunks ,apps/chunkMan ,no_params          ,y    ,
 
 on      ,both ,fast  ,chunks ,apps/chunkMan ,remote_fail        ,y    ,remote
 on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,extract_stats      ,n    ,extract = stats
-on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,extract_blooms     ,n    ,extract = blooms
+on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,extract_blooms     ,n    ,extract = bloom
 
 off     ,both ,fast  ,chunks ,apps/chunkMan ,invalid_param_1    ,y    ,junk
 off     ,both ,fast  ,chunks ,apps/chunkMan ,list_local         ,y    ,list

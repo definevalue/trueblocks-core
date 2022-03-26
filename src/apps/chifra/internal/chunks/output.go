@@ -26,7 +26,7 @@ func RunChunks(cmd *cobra.Command, args []string) error {
 	}
 
 	// EXISTING_CODE
-	if opts.Extract == "blooms" {
+	if opts.Extract == "bloom" {
 		return opts.HandleChunksExtractBlooms()
 	}
 
