@@ -12,7 +12,7 @@
  *-------------------------------------------------------------------------------------------*/
 #include "options.h"
 
-// static char delim = ',';
+uint32_t bitsPerLine = 2048;
 //----------------------------------------------------------------
 static bool bloomVisitFunc(const string_q& path, void* data) {
     if (endsWith(path, "/")) {
@@ -33,27 +33,36 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
         };
         const size_t nColors = 12;  // sizeof(colors) / sizeof(string_q);
 
-#define NN (2048)
-        size_t cnt = 0;
         for (auto bloom : blooms) {
             for (size_t i = 0; i < getBloomWidthInBits(); i++) {
                 if (bloom.isBitLit(i))
                     cout << colors[i % nColors] << '1' << cOff;
                 else
                     cout << '.';
-                if (!(i % NN))
+                if (!((i + 1) % bitsPerLine))
                     cout << " " << startBlock << endl;
                 cout.flush();
             }
-            cout << cRed << string_q(150, '=') << cOff << endl << endl;
-            cnt++;
+            cout << endl << cRed << string_q(150, '=') << cOff << endl << endl;
+            if (isTestMode()) {
+                continue;
+            }
         }
     }
-    return true;
+
+    return !shouldQuit();
 }
 
 //----------------------------------------------------------------
 bool COptions::handle_extract_blooms(void) {
+    // bitsPerLine = (2048 / 16);
+
     blknum_t last = 0;
+    if (isTestMode()) {
+        bloomVisitFunc(indexFolder_blooms + "000000000-000000000.bloom", &last);
+        bloomVisitFunc(indexFolder_blooms + "000000001-000590501.bloom", &last);
+        return true;
+    }
+
     return forEveryFileInFolder(indexFolder_blooms, bloomVisitFunc, &last);
 }
