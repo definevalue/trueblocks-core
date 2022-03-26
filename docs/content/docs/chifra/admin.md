@@ -2,7 +2,7 @@
 title: "Admin"
 description: ""
 lead: ""
-date: 2022-02-28T19:22:53
+date: 2022-03-26T10:50:20
 lastmod:
   - :git
   - lastmod
@@ -118,14 +118,12 @@ Usage:
   chifra chunks [flags] <block> [block...]
 
 Arguments:
-  blocks - an optional list of blocks to process
+  blocks - optional list of blocks to intersect with chunk ranges
 
 Flags:
   -c, --check            check the validity of the chunk or bloom
   -e, --extract string   show some or all of the contents of the chunk or bloom filters
-                         One of [ header | addr_table | app_table | chunks | blooms ]
-  -s, --stats            for the --list option only, display statistics about each chunk or bloom
-  -a, --save             for the --extract option only, save the entire chunk to a similarly named file as well as display
+                         One of [ stats | pins | bloom | index | header | addresses | appearances ]
   -x, --fmt string       export format, one of [none|json*|txt|csv|api]
   -v, --verbose          enable verbose (increase detail with --log_level)
   -h, --help             display this help screen

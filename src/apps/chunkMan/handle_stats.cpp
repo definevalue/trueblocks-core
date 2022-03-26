@@ -28,6 +28,18 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
         if (last >= startBlock)
             return true;
 
+        if (isTestMode()) {
+            if (startBlock > 2000000 && startBlock < 3000000) {
+                // too slow, so skip for testing
+                return true;
+            }
+
+            if (startBlock > 4000000) {
+                // enough already
+                return false;
+            }
+        }
+
         CBloomArray blooms;
         readBloomFromBinary(path, blooms);
 
@@ -100,10 +112,15 @@ bool COptions::handle_stats() {
     CStringArray lines;
     asciiFileToLines(cacheFolder_tmp + "chunk_stats.csv", lines);
     for (auto line : lines) {
-        cout << line << endl;
+        blknum_t start = str_2_Uint(line);
+        if (!isTestMode() || start <= 4000000) {
+            cout << line << endl;
+        }
     }
+
     blknum_t last = 0;
     if (lines.size() > 0)
         last = str_2_Uint(lines[lines.size() - 1]);
+
     return forEveryFileInFolder(indexFolder_blooms, bloomVisitFunc, &last);
 }

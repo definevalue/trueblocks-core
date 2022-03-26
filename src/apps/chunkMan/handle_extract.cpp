@@ -19,7 +19,6 @@ static bool chunkVisitFunc(const string_q& path, void* data) {
         return forEveryFileInFolder(path + "*", chunkVisitFunc, data);
 
     } else {
-        //        LOG_WARN(path);
         if (!endsWith(path, ".bin"))
             return true;
 
@@ -38,18 +37,6 @@ static bool chunkVisitFunc(const string_q& path, void* data) {
             return true;
         }
 
-        ostringstream os;
-        os << "./out/" << padNum9(startBlock) << '-' << padNum9(endBlock) << ".txt";
-        string_q outFile = os.str();
-        ofstream output;
-        if (opts->save) {
-            output.open(outFile, ios::out | ios::trunc);
-            if (!output.is_open()) {
-                LOG_ERR("Could not create file ", outFile, ". Quitting...");
-                return false;
-            }
-        }
-
         CIndexArchive index(READING_ARCHIVE);
         if (index.ReadIndexFromBinary(path)) {
             string_q msg = "start: {0} end: {1} fileSize: {2} bloomSize: {3} nAddrs: {4} nRows: {5}";
@@ -61,41 +48,32 @@ static bool chunkVisitFunc(const string_q& path, void* data) {
                 "{" + padNum9T(fileSize(substitute(substitute(path, "finalized", "blooms"), ".bin", ".bloom"))) + "}");
             replace(msg, "{4}", "{" + padNum9T(uint64_t(index.header->nAddrs)) + "}");
             replace(msg, "{5}", "{" + padNum9T(uint64_t(index.header->nRows)) + "}");
-            if (opts->save) {
+            if (verbose) {
                 string_q m = msg;
                 replaceAny(m, "{}", "");
                 replaceAll(m, "  ", " ");
-                output << "# " << m << endl;
-                output << "address\tstart\tcount" << endl;
+                cout << "# " << m << endl;
+                cout << "address\tstart\tcount" << endl;
             }
             replaceAll(msg, "{", cGreen);
             replaceAll(msg, "}", cOff);
             cout << msg << endl;
 
             if (verbose > 0) {
-                ostringstream out;
                 for (uint32_t a = 0; a < index.nAddrs; a++) {
                     CIndexedAddress* aRec = &index.addresses[a];
-                    out << bytes_2_Addr(aRec->bytes) << "\t" << aRec->offset << "\t" << aRec->cnt << endl;
+                    cout << bytes_2_Addr(aRec->bytes) << "\t" << aRec->offset << "\t" << aRec->cnt << endl;
                     if (verbose > 4) {
                         for (uint32_t b = aRec->offset; b < (aRec->offset + aRec->cnt); b++) {
                             CIndexedAppearance* bRec = &index.appearances[b];
-                            out << "\t" << bRec->blk << "\t" << bRec->txid << endl;
+                            cout << "\t" << bRec->blk << "\t" << bRec->txid << endl;
                         }
                     }
                 }
-
-                cout << out.str();
-                if (opts->save) {
-                    output << out.str();
-                }
             }
         }
-
-        if (opts->save) {
-            output.close();
-        }
     }
+
     return true;
 }
 
@@ -103,38 +81,11 @@ static bool chunkVisitFunc(const string_q& path, void* data) {
 bool COptions::handle_extract() {
     if (extract == "blooms") {
         return handle_extract_blooms();
+    } else if (extract == "stats") {
+        return handle_stats();
     } else {
-        establishFolder("out");
         return forEveryFileInFolder(indexFolder_finalized, chunkVisitFunc, this);
     }
     LOG_PROG("Finished");
     return true;
 }
-
-#if 0
-string_q result;
-queryRawBlockTrace(result, uint_2_Hex(bn));
-cout << results << endl;
-
-CLog Filter log Filter;
-log Filter.fromBlock = bn;
-log Filter.toBlock = bn;
-queryRawLogs(result, log Filter);
-cout << results << endl;
-
-CBlock block;
-getBlock(block);
-for (auto tx : block.transactions) {
-    queryRawReceipt(results, tx.hash);
-    cout << results << endl;
-}
-
-// json.Marshal(RPCPayload{"2.0", "trace_block", RPCParams{fmt.Sprintf("0x%x", blockNum)}, 2})
-// bool queryRawBlockTrace(string_q& blockStr, const string_q& hexNum) {
-
-// payloadBytes, err := json.Marshal(RPCPayload{"2.0", "eth_getLogs", RPCParams{LogFilter{fmt.Sprintf("0x%x", blockNum), fmt.Sprintf("0x%x", blockNum)}}, 2})
-// bool queryRawLogs(string_q& results, const CLog Filter& query) {
-
-// payloadBytes, err := json.Marshal(RPCPayload{"2.0", "eth_getTransactionReceipt", RPCParams{hash}, 2})
-// bool queryRawReceipt(string_q& results, const hash_t& txHash) {
-#endif

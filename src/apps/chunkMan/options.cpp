@@ -21,11 +21,9 @@
 static const COption params[] = {
     // BEG_CODE_OPTIONS
     // clang-format off
-    COption("blocks", "", "list<blknum>", OPT_POSITIONAL, "an optional list of blocks to process"),
+    COption("blocks", "", "list<blknum>", OPT_POSITIONAL, "optional list of blocks to intersect with chunk ranges"),
     COption("check", "c", "", OPT_SWITCH, "check the validity of the chunk or bloom"),
-    COption("extract", "e", "enum[header|addr_table|app_table|chunks|blooms]", OPT_FLAG, "show some or all of the contents of the chunk or bloom filters"),  // NOLINT
-    COption("stats", "s", "", OPT_SWITCH, "for the --list option only, display statistics about each chunk or bloom"),
-    COption("save", "a", "", OPT_SWITCH, "for the --extract option only, save the entire chunk to a similarly named file as well as display"),  // NOLINT
+    COption("extract", "e", "enum[stats|pins|bloom|index|header|addresses|appearances]", OPT_FLAG, "show some or all of the contents of the chunk or bloom filters"),  // NOLINT
     COption("", "", "", OPT_DESCRIPTION, "Manage and investigate chunks and bloom filters."),
     // clang-format on
     // END_CODE_OPTIONS
@@ -55,12 +53,6 @@ bool COptions::parseArguments(string_q& command) {
                 return false;
         } else if (arg == "-e" || arg == "--extract") {
             return flag_required("extract");
-
-        } else if (arg == "-s" || arg == "--stats") {
-            stats = true;
-
-        } else if (arg == "-a" || arg == "--save") {
-            save = true;
 
         } else if (startsWith(arg, '-')) {  // do not collapse
 
@@ -101,8 +93,6 @@ void COptions::Init(void) {
     // BEG_CODE_INIT
     check = false;
     extract = "";
-    stats = false;
-    save = false;
     // END_CODE_INIT
 }
 

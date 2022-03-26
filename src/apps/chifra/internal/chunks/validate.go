@@ -19,11 +19,7 @@ func (opts *ChunksOptions) ValidateChunks() error {
 		return validate.Usage("Please choose at least one of {0}.", "--extract or --check")
 	}
 
-	// if Options.Stats && !Options.List {
-	// 	return validate.Usage("The {0} option is available only with {1}.", "--stats", "--list")
-	// }
-
-	err := validate.ValidateEnum("--extract", opts.Extract, "[header|addr_table|app_table|chunks|blooms]")
+	err := validate.ValidateEnum("--extract", opts.Extract, "[stats|pins|bloom|index|header|addresses|appearances]")
 	if err != nil {
 		return err
 	}

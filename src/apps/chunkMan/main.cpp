@@ -39,10 +39,7 @@ int main(int argc, const char* argv[]) {
                 options.handle_check();
 
             } else {
-                if (options.stats)
-                    options.handle_stats();
-                else
-                    options.handle_list();
+                options.handle_list();
             }
         }
         once = false;

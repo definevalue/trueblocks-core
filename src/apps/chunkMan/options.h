@@ -26,8 +26,6 @@ class COptions : public CBlockOptions {
     // BEG_CODE_DECLARE
     bool check;
     string_q extract;
-    bool stats;
-    bool save;
     // END_CODE_DECLARE
 
     CPinnedChunkArray pins;
