@@ -47,7 +47,7 @@ contract UnchainedIndex {
         send(owner, balance);
     }
 
-    event HashPublished(string hashType, string theHash);
+    event HashPublished(string type, string hash);
     event OwnerChanged(address oldOwner, address newOwner);
     event DonationSent(address from, uint256 amount, uint256 ts);
 
