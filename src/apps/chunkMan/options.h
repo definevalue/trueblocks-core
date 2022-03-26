@@ -24,7 +24,6 @@
 class COptions : public CBlockOptions {
   public:
     // BEG_CODE_DECLARE
-    bool check;
     string_q extract;
     // END_CODE_DECLARE
 
@@ -36,10 +35,6 @@ class COptions : public CBlockOptions {
     bool parseArguments(string_q& command) override;
     void Init(void) override;
 
-    bool handle_list(void);
-    bool handle_check(void);
     bool handle_stats(void);
-
     bool handle_extract(void);
-    bool handle_extract_blooms(void);
 };

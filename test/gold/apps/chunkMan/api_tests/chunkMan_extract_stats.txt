@@ -1,7 +1,5 @@
-chifra chunks  --extract stats --fmt csv
-TEST[DATE|TIME] Extract:  stats
-TEST[DATE|TIME] Format:  csv
-start,end,nBlks,nAddrs,nApps,nBits,nA/nB,nP/nB,nP/nA,nA/Bt,nBlooms,recWid,bloomSz,chunkSz,comp,bloomTs,chunkTscheckSize,checkCount
+chunks?extract=stats&fmt=csv
+start,end,nBlks,nAddrs,nApps,nBits,nA/nB,nP/nB,nP/nA,nA/Bt,nBlooms,recWid,bloomSz,chunkSz,comp,bloomTs,chunkTs
 1,590501,590501,29330,2000001,133311,0.050,3.387,68.190,0.220,1,131076,131080,16821292,128.328,1617953038,1617953038
 590502,864332,273831,164449,2000003,734236,0.601,7.304,12.162,0.224,4,131076,524308,20604640,39.299,1617954748,1617954748
 864333,1076298,211966,81007,2000017,361973,0.382,9.436,24.689,0.224,2,131076,262156,18268376,69.685,1617955898,1617955898

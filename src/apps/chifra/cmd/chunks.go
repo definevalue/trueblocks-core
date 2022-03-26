@@ -44,9 +44,8 @@ Notes:
 func init() {
 	chunksCmd.Flags().SortFlags = false
 
-	chunksCmd.Flags().BoolVarP(&chunksPkg.GetOptions().Check, "check", "c", false, "check the validity of the chunk or bloom")
 	chunksCmd.Flags().StringVarP(&chunksPkg.GetOptions().Extract, "extract", "e", "", `show some or all of the contents of the chunk or bloom filters
-One of [ stats | pins | bloom | index | header | addresses | appearances ]`)
+One of [ stats | pins | blooms | index | header | addresses | appearances ]`)
 	globals.InitGlobals(chunksCmd, &chunksPkg.GetOptions().Globals)
 
 	chunksCmd.SetUsageTemplate(UsageWithNotes(notesChunks))

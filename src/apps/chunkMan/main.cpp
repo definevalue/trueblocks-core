@@ -28,20 +28,8 @@ int main(int argc, const char* argv[]) {
 
         // TODO: This needs to work for some options, but doesn't work on non-mainnet chains
         // pinlib_readManifest(options.pins);
-        if (!options.extract.empty()) {
-            options.handle_extract();
-
-        } else {
-            if (once)
-                cout << exportPreamble(expContext().fmtMap["header"], "CPinnedChunk");
-
-            if (options.check) {
-                options.handle_check();
-
-            } else {
-                options.handle_list();
-            }
-        }
+        ASSERT(!options.extract.empty());
+        options.handle_extract();
         once = false;
     }
 

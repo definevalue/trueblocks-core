@@ -22,8 +22,7 @@ static const COption params[] = {
     // BEG_CODE_OPTIONS
     // clang-format off
     COption("blocks", "", "list<blknum>", OPT_POSITIONAL, "optional list of blocks to intersect with chunk ranges"),
-    COption("check", "c", "", OPT_SWITCH, "check the validity of the chunk or bloom"),
-    COption("extract", "e", "enum[stats|pins|bloom|index|header|addresses|appearances]", OPT_FLAG, "show some or all of the contents of the chunk or bloom filters"),  // NOLINT
+    COption("extract", "e", "enum[stats|pins|blooms|index|header|addresses|appearances]", OPT_FLAG, "show some or all of the contents of the chunk or bloom filters"),  // NOLINT
     COption("", "", "", OPT_DESCRIPTION, "Manage and investigate chunks and bloom filters."),
     // clang-format on
     // END_CODE_OPTIONS
@@ -45,9 +44,6 @@ bool COptions::parseArguments(string_q& command) {
         if (false) {
             // do nothing -- make auto code generation easier
             // BEG_CODE_AUTO
-        } else if (arg == "-c" || arg == "--check") {
-            check = true;
-
         } else if (startsWith(arg, "-e:") || startsWith(arg, "--extract:")) {
             if (!confirmEnum("extract", extract, arg))
                 return false;
@@ -77,10 +73,6 @@ bool COptions::parseArguments(string_q& command) {
         blocks.start = blocks[0];
     }
 
-    if (extract != "bloom") {
-        configureDisplay("chunkMan", "CPinnedChunk", STR_DISPLAY_PINNEDCHUNK);
-    }
-
     return true;
 }
 
@@ -91,7 +83,6 @@ void COptions::Init(void) {
     // END_CODE_GLOBALOPTS
 
     // BEG_CODE_INIT
-    check = false;
     extract = "";
     // END_CODE_INIT
 }

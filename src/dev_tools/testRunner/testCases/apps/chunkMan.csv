@@ -3,9 +3,12 @@ on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,help               ,n    ,@h
 on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,help_long          ,n    ,help
 on      ,both ,fast  ,chunks ,apps/chunkMan ,no_params          ,y    ,
 
-on      ,both ,fast  ,chunks ,apps/chunkMan ,remote_fail        ,y    ,remote
-on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,extract_stats      ,n    ,extract = stats
-on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,extract_blooms     ,n    ,extract = bloom
+on      ,both ,fast  ,chunks ,apps/chunkMan ,remote_fail        ,n    ,remote
+on      ,both ,fast  ,chunks ,apps/chunkMan ,extract_stats      ,n    ,extract = stats & fmt = csv
+on      ,cmd  ,fast  ,chunks ,apps/chunkMan ,extract_blooms     ,n    ,extract = blooms
+on      ,both ,fast  ,chunks ,apps/chunkMan ,extract_pins       ,n    ,extract = pins & fmt = csv
+on      ,both ,fast  ,chunks ,apps/chunkMan ,extract_pins2      ,y    ,extract = pins
+on      ,both ,fast  ,chunks ,apps/chunkMan ,extract_pins3      ,y    ,extract = pins & fmt = api
 
 off     ,both ,fast  ,chunks ,apps/chunkMan ,invalid_param_1    ,y    ,junk
 off     ,both ,fast  ,chunks ,apps/chunkMan ,list_local         ,y    ,list

@@ -79,9 +79,7 @@ static bool chunkVisitFunc(const string_q& path, void* data) {
 
 //----------------------------------------------------------------
 bool COptions::handle_extract() {
-    if (extract == "blooms") {
-        return handle_extract_blooms();
-    } else if (extract == "stats") {
+    if (extract == "stats") {
         return handle_stats();
     } else {
         return forEveryFileInFolder(indexFolder_finalized, chunkVisitFunc, this);

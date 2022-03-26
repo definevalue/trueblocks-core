@@ -20,7 +20,6 @@ import (
 
 type ChunksOptions struct {
 	Blocks  []string
-	Check   bool
 	Extract string
 	Globals globals.GlobalOptions
 	BadFlag error
@@ -30,16 +29,12 @@ var chunksCmdLineOptions ChunksOptions
 
 func (opts *ChunksOptions) TestLog() {
 	logger.TestLog(len(opts.Blocks) > 0, "Blocks: ", opts.Blocks)
-	logger.TestLog(opts.Check, "Check: ", opts.Check)
 	logger.TestLog(len(opts.Extract) > 0, "Extract: ", opts.Extract)
 	opts.Globals.TestLog()
 }
 
 func (opts *ChunksOptions) ToCmdLine() string {
 	options := ""
-	if opts.Check {
-		options += " --check"
-	}
 	if len(opts.Extract) > 0 {
 		options += " --extract " + opts.Extract
 	}
@@ -57,8 +52,6 @@ func FromRequest(w http.ResponseWriter, r *http.Request) *ChunksOptions {
 				s := strings.Split(val, " ") // may contain space separated items
 				opts.Blocks = append(opts.Blocks, s...)
 			}
-		case "check":
-			opts.Check = true
 		case "extract":
 			opts.Extract = value[0]
 		default:

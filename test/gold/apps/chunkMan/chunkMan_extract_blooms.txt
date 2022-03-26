@@ -1,5 +1,5 @@
-chifra chunks  --extract bloom
-TEST[DATE|TIME] Extract:  bloom
+chifra chunks  --extract blooms
+TEST[DATE|TIME] Extract:  blooms
 range: {0 0}
 nBlooms: 1
 byteWidth: 131072
