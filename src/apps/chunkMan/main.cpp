@@ -21,7 +21,6 @@ int main(int argc, const char* argv[]) {
     if (!options.prepareArguments(argc, argv))
         return 0;
 
-    bool once = true;
     for (auto command : options.commandLines) {
         if (!options.parseArguments(command))
             return 0;
@@ -30,7 +29,6 @@ int main(int argc, const char* argv[]) {
         // pinlib_readManifest(options.pins);
         ASSERT(!options.extract.empty());
         options.handle_extract();
-        once = false;
     }
 
     cout << exportPostamble(options.errors, expContext().fmtMap["meta"]);
