@@ -1,15 +1,14 @@
 chifra pins  --list --freshen
-TEST[DATE|TIME] List:  true
 Error: The --freshen flag has been deprecated. Use --init instead.
 Usage:
   chifra pins [flags]
 
 Flags:
-  -l, --list          list the bloom and index hashes from local cache or IPFS
   -i, --init          download the blooms or index chunks from IPFS
   -a, --all           in addition to Bloom filters, download full index chunks
-  -S, --share         share downloaded data by pinning it to IPFS (the IPFS daemon must be running)
-  -s, --sleep float   throttle requests by this many seconds (default 0.25)
+  -l, --list          list the bloom and index hashes from local cache or IPFS (hidden)
+  -S, --share         share downloaded data by pinning it to IPFS (the IPFS daemon must be running) (hidden)
+  -s, --sleep float   throttle requests by this many seconds (hidden) (default 0.25)
   -f, --freshen       check for new bloom or index chunks and download if available (hidden)
   -r, --remote        for --list mode only, recover the manifest from IPFS via UnchainedIndex smart contract (hidden)
   -n, --init_all      use --init --all instead (hidden)

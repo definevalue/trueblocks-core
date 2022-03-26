@@ -1,5 +1,4 @@
 chifra pins  --list --fmt csv
-TEST[DATE|TIME] List:  true
 TEST[DATE|TIME] Format:  csv
 INFO[DATE|TIME] hashToIndexFormatFile: Qmart6XP9XjL43p72PGR93QKytbK8jWWcMguhFgxATTya2
 INFO[DATE|TIME] hashToBloomFormatFile: QmNhPk39DUFoEdhUmtGARqiFECUHeghyeryxZM9kyRxzHD
