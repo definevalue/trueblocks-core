@@ -55,8 +55,6 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
 
 //----------------------------------------------------------------
 bool COptions::handle_extract_blooms(void) {
-    // bytesPerLine = (2048 / 16);
-
     blknum_t last = 0;
     if (isTestMode()) {
         bloomVisitFunc(indexFolder_blooms + "000000000-000000000.bloom", &last);
