@@ -12,7 +12,7 @@
  *-------------------------------------------------------------------------------------------*/
 #include "options.h"
 
-uint32_t bitsPerLine = 2048;
+uint32_t bytesPerLine = (2048 / 64);
 //----------------------------------------------------------------
 static bool bloomVisitFunc(const string_q& path, void* data) {
     if (endsWith(path, "/")) {
@@ -22,30 +22,30 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
         blknum_t endBlock = NOPOS;
         blknum_t startBlock = path_2_Bn(path, endBlock);
         blknum_t last = *(blknum_t*)data;
-        if (last >= startBlock)
+        if (last > startBlock)
             return true;
 
         CBloomArray blooms;
         readBloomFromBinary(path, blooms);
 
-        const CStringArray colors = {
-            bGreen, bBlue, bTeal, bMagenta, bYellow, bWhite, cGreen, cBlue, cTeal, cMagenta, cYellow, cWhite,
-        };
-        const size_t nColors = 12;  // sizeof(colors) / sizeof(string_q);
-
+        ostringstream os;
+        cout << "range: {" << startBlock << " " << endBlock << "}" << endl;
+        cout << "nBlooms: " << blooms.size() << endl;
+        cout << "byteWidth: " << getBloomWidthInBytes() << endl;
         for (auto bloom : blooms) {
-            for (size_t i = 0; i < getBloomWidthInBits(); i++) {
-                if (bloom.isBitLit(i))
-                    cout << colors[i % nColors] << '1' << cOff;
-                else
-                    cout << '.';
-                if (!((i + 1) % bitsPerLine))
-                    cout << " " << startBlock << endl;
-                cout.flush();
+            cout << "nInserted: " << bloom.nInserted << endl;
+            for (size_t i = 0; i < getBloomWidthInBytes(); i++) {
+                if (!(i % bytesPerLine)) {
+                    if (i != 0)
+                        cout << endl;
+                    cout << padNum7T(uint64_t(i)) << ": ";
+                }
+                uint8_t ch = bloom.bits[i];
+                cout << bitset<8>(ch) << ' ';
             }
-            cout << endl << cRed << string_q(150, '=') << cOff << endl << endl;
+            cout << endl;
             if (isTestMode()) {
-                continue;
+                return false;
             }
         }
     }
@@ -55,7 +55,7 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
 
 //----------------------------------------------------------------
 bool COptions::handle_extract_blooms(void) {
-    // bitsPerLine = (2048 / 16);
+    // bytesPerLine = (2048 / 16);
 
     blknum_t last = 0;
     if (isTestMode()) {

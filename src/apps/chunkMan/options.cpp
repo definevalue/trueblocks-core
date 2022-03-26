@@ -85,7 +85,9 @@ bool COptions::parseArguments(string_q& command) {
         blocks.start = blocks[0];
     }
 
-    configureDisplay("chunkMan", "CPinnedChunk", STR_DISPLAY_PINNEDCHUNK);
+    if (extract != "bloom") {
+        configureDisplay("chunkMan", "CPinnedChunk", STR_DISPLAY_PINNEDCHUNK);
+    }
 
     return true;
 }
