@@ -73,12 +73,10 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
         os << recordSize << delim;
         os << fileSize(path) << delim;
         os << fileSize(chunkPath) << delim;
-        os << double_2_Str(fileSize(path) ? float(fileSize(chunkPath)) / float(fileSize(path)) : 0., 3) << delim;
-        os << date_2_Ts(fileLastModifyDate(path)) << delim;
-        os << date_2_Ts(fileLastModifyDate(chunkPath));
+        os << double_2_Str(fileSize(path) ? float(fileSize(chunkPath)) / float(fileSize(path)) : 0., 3);
         cout << os.str();
-        cout << checkSize << delim;
-        cout << ((header.nAddrs == totalAddrs) ? greenCheck : redX);
+        cerr << delim << checkSize << delim;
+        cerr << ((header.nAddrs == totalAddrs) ? greenCheck : redX);
         cout << endl;
         appendToAsciiFile(cacheFolder_tmp + "chunk_stats.csv", os.str() + "\n");
     }
@@ -102,10 +100,8 @@ bool COptions::handle_stats() {
     cout << "recWid" << delim;
     cout << "bloomSz" << delim;
     cout << "chunkSz" << delim;
-    cout << "comp" << delim;
-    cout << "bloomTs" << delim;
-    cout << "chunkTs";
-    cerr << "checkSize" << delim;
+    cout << "comp";
+    cerr << delim << "checkSize" << delim;
     cerr << "checkCount";
     cout << endl;
 
