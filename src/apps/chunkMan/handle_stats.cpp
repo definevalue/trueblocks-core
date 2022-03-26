@@ -12,7 +12,48 @@
  *-------------------------------------------------------------------------------------------*/
 #include "options.h"
 
+string_q STR_INDEX_STATS =
+    ("start|end|nBlks|nAddrs|nApps|nBits|nA/nB|nP/nB|nP/nA|nA/Bt|nBlooms|recWid|bloomSz|chunkSz|comp");
 static char delim = ',';
+
+//--------------------------------------------------------------
+class CThing {
+  public:
+    blkrange_t range;
+    CBloomArray blooms;
+    CIndexHeader header;
+    string_q getHeaders(void) const {
+        string_q fieldList = STR_INDEX_STATS;
+        CStringArray fields;
+        explode(fields, fieldList, '|');
+        ostringstream os;
+        for (auto field : fields) {
+            os << field << delim;
+        }
+        return os.str();
+    }
+    uint64_t nBlocks(void) const {
+        return (range.second - range.first) + 1;
+    }
+    uint64_t nBlooms(void) const {
+        return blooms.size();
+    }
+    uint64_t nBloomInserts(void) const {
+        size_t cnt = 0;
+        for (auto bloom : blooms) {
+            cnt += bloom.nInserted;
+        }
+        return cnt;
+    }
+    uint64_t totalBits(void) const {
+        size_t ret = 0;
+        for (auto bloom : blooms) {
+            ret += bloom.nBitsHit();
+        }
+        return ret;
+    }
+};
+
 //--------------------------------------------------------------
 static bool bloomVisitFunc(const string_q& path, void* data) {
     if (endsWith(path, "/")) {
@@ -22,63 +63,61 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
         if (!endsWith(path, ".bloom"))
             return true;
 
-        blknum_t endBlock = NOPOS;
-        blknum_t startBlock = path_2_Bn(path, endBlock);
-        blknum_t last = *(blknum_t*)data;
-        if (last >= startBlock)
-            return true;
+        COptions* opts = (COptions*)data;
+
+        CThing thing;
+        thing.range.second = NOPOS;
+        thing.range.first = path_2_Bn(path, thing.range.second);
+        // cout << path << "\t" << thing.range << "\t" << opts->last << endl;
+
+        if (thing.range.first == 0) {
+            if (opts->last != 0)
+                return true;
+        } else {
+            if (opts->last >= thing.range.first)
+                return true;
+        }
 
         if (isTestMode()) {
-            if (startBlock > 2000000 && startBlock < 3000000) {
+            if (thing.range.first > 2000000 && thing.range.first < 3000000) {
                 // too slow, so skip for testing
                 return true;
             }
 
-            if (startBlock > 4000000) {
+            if (thing.range.first > 4000000) {
                 // enough already
                 return false;
             }
         }
 
-        CBloomArray blooms;
-        readBloomFromBinary(path, blooms);
-
-        CIndexHeader header;
         string_q chunkPath = substitute(substitute(path, "blooms", "finalized"), ".bloom", ".bin");
-        readIndexHeader(chunkPath, header);
 
-        blknum_t nBlocks = (endBlock - startBlock) + 1;
-        size_t nBlooms = blooms.size();
+        readBloomFromBinary(path, thing.blooms);
+        readIndexHeader(chunkPath, thing.header);
+
         size_t recordSize = (sizeof(uint32_t) + getBloomWidthInBytes());
-        size_t totalAddrs = 0;
-        size_t totalBits = 0;
-        for (auto bloom : blooms) {
-            totalBits += bloom.nBitsHit();
-            totalAddrs += bloom.nInserted;
-        }
-        string_q checkSize = sizeof(uint32_t) + (nBlooms * recordSize) == fileSize(path) ? greenCheck : redX;
 
         ostringstream os;
-        os << startBlock << delim;
-        os << endBlock << delim;
-        os << nBlocks << delim;
-        os << header.nAddrs << delim;
-        os << header.nRows << delim;
-        os << totalBits << delim;
-        os << double_2_Str(nBlocks ? float(header.nAddrs) / float(nBlocks) : 0., 3) << delim;
-        os << double_2_Str(nBlocks ? float(header.nRows) / float(nBlocks) : 0., 3) << delim;
-        os << double_2_Str(header.nAddrs ? float(header.nRows) / float(header.nAddrs) : 0., 3) << delim;
-        os << double_2_Str(totalBits ? float(totalAddrs) / float(totalBits) : 0., 3) << delim;
-        os << nBlooms << delim;
+        os << thing.range.first << delim;
+        os << thing.range.second << delim;
+        os << thing.nBlocks() << delim;
+        os << thing.header.nAddrs << delim;
+        os << thing.header.nRows << delim;
+        os << thing.totalBits() << delim;
+        os << double_2_Str(thing.nBlocks() ? float(thing.header.nAddrs) / float(thing.nBlocks()) : 0., 3) << delim;
+        os << double_2_Str(thing.nBlocks() ? float(thing.header.nRows) / float(thing.nBlocks()) : 0., 3) << delim;
+        os << double_2_Str(thing.header.nAddrs ? float(thing.header.nRows) / float(thing.header.nAddrs) : 0., 3)
+           << delim;
+        os << double_2_Str(thing.totalBits() ? float(thing.nBloomInserts()) / float(thing.totalBits()) : 0., 3)
+           << delim;
+        os << thing.nBlooms() << delim;
         os << recordSize << delim;
         os << fileSize(path) << delim;
         os << fileSize(chunkPath) << delim;
         os << double_2_Str(fileSize(path) ? float(fileSize(chunkPath)) / float(fileSize(path)) : 0., 3);
+        os << endl;
+        appendToAsciiFile(cacheFolder_tmp + "chunk_stats.csv", os.str());
         cout << os.str();
-        cerr << delim << checkSize << delim;
-        cerr << ((header.nAddrs == totalAddrs) ? greenCheck : redX);
-        cout << endl;
-        appendToAsciiFile(cacheFolder_tmp + "chunk_stats.csv", os.str() + "\n");
     }
 
     return true;
@@ -86,25 +125,15 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
 
 //----------------------------------------------------------------
 bool COptions::handle_stats() {
-    cout << "start" << delim;
-    cout << "end" << delim;
-    cout << "nBlks" << delim;
-    cout << "nAddrs" << delim;
-    cout << "nApps" << delim;
-    cout << "nBits" << delim;
-    cout << "nA/nB" << delim;
-    cout << "nP/nB" << delim;
-    cout << "nP/nA" << delim;
-    cout << "nA/Bt" << delim;
-    cout << "nBlooms" << delim;
-    cout << "recWid" << delim;
-    cout << "bloomSz" << delim;
-    cout << "chunkSz" << delim;
-    cout << "comp";
-    cerr << delim << "checkSize" << delim;
-    cerr << "checkCount";
-    cout << endl;
+    CThing thing;
+    cout << thing.getHeaders() << endl;
 
+    readCache();
+    return forEveryFileInFolder(indexFolder_blooms, bloomVisitFunc, this);
+}
+
+//----------------------------------------------------------------
+bool COptions::readCache() {
     CStringArray lines;
     asciiFileToLines(cacheFolder_tmp + "chunk_stats.csv", lines);
     for (auto line : lines) {
@@ -114,9 +143,13 @@ bool COptions::handle_stats() {
         }
     }
 
-    blknum_t last = 0;
+    last = 0;
     if (lines.size() > 0)
         last = str_2_Uint(lines[lines.size() - 1]);
 
-    return forEveryFileInFolder(indexFolder_blooms, bloomVisitFunc, &last);
+    return true;
 }
+
+// string_q checkSize = sizeof(uint32_t) + (thing.nBlooms() * recordSize) == fileSize(path) ? greenCheck : redX;
+// os << checkSize << delim;
+// os << ((thing.header.nAddrs == thing.nBloomInserts()) ? greenCheck : redX);
