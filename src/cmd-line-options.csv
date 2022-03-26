@@ -250,14 +250,14 @@ num,group,tags,api_route,tool,longName,hotKey,def_val,is_required,is_customizabl
 21962,apps,Admin,chunks,chunkMan,,,,false,false,true,true,--,description,,Manage and investigate chunks and bloom filters.
 21964,apps,Admin,chunks,chunkMan,n1,,,false,false,false,false,--,note,,Only a single block in a given chunk needs to be supplied.
 
-10950,apps,Admin,pins,pinMan,list,l,,false,false,true,true,local,switch,<boolean>,list the bloom and index hashes from local cache or IPFS
 10952,apps,Admin,pins,pinMan,init,i,,false,false,true,true,header,switch,<boolean>,download the blooms or index chunks from IPFS
 10958,apps,Admin,pins,pinMan,all,a,,false,false,true,true,header,switch,<boolean>,in addition to Bloom filters&#44; download full index chunks
-10962,apps,Admin,pins,pinMan,share,S,,false,false,true,true,header,switch,<boolean>,share downloaded data by pinning it to IPFS (the IPFS daemon must be running)
-10960,apps,Admin,pins,pinMan,sleep,s,.25,false,false,true,true,header,flag,<double>,throttle requests by this many seconds
-10954,apps,Admin,pins,pinMan,freshen,f,,false,false,false,false,header,deprecated,<boolean>,check for new bloom or index chunks and download if available
-10956,apps,Admin,pins,pinMan,remote,r,,false,false,false,false,header,deprecated,<boolean>,for --list mode only&#44; recover the manifest from IPFS via UnchainedIndex smart contract
-10964,apps,Admin,pins,pinMan,init_all,n,,false,false,false,false,header,deprecated,<boolean>,use --init --all instead
+10950,apps,Admin,pins,pinMan,list,l,,false,false,false,false,local,deprecated,<boolean>,list the bloom and index hashes from local cache or IPFS
+10962,apps,Admin,pins,pinMan,share,S,,false,false,false,false,local,deprecated,<boolean>,share downloaded data by pinning it to IPFS (the IPFS daemon must be running)
+10960,apps,Admin,pins,pinMan,sleep,s,.25,false,false,false,false,local,deprecated,<double>,throttle requests by this many seconds
+10954,apps,Admin,pins,pinMan,freshen,f,,false,false,false,false,local,deprecated,<boolean>,check for new bloom or index chunks and download if available
+10956,apps,Admin,pins,pinMan,remote,r,,false,false,false,false,local,deprecated,<boolean>,for --list mode only&#44; recover the manifest from IPFS via UnchainedIndex smart contract
+10964,apps,Admin,pins,pinMan,init_all,n,,false,false,false,false,local,deprecated,<boolean>,use --init --all instead
 10966,apps,Admin,pins,pinMan,,,,false,false,true,true,--,description,,Manage pinned index of appearances and associated blooms.
 10970,apps,Admin,pins,pinMan,n1,,,false,false,false,false,--,note,,One of `--list` or `--init` is required.
 10974,apps,Admin,pins,pinMan,n2,,,false,false,false,false,--,note,,Re-run `chifra init` as often as you wish. It will repair or freshen the index.

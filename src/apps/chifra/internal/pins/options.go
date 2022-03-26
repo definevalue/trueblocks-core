@@ -18,9 +18,9 @@ import (
 )
 
 type PinsOptions struct {
-	List    bool
 	Init    bool
 	All     bool
+	List    bool
 	Share   bool
 	Sleep   float64
 	Freshen bool
@@ -33,30 +33,18 @@ type PinsOptions struct {
 var pinsCmdLineOptions PinsOptions
 
 func (opts *PinsOptions) TestLog() {
-	logger.TestLog(opts.List, "List: ", opts.List)
 	logger.TestLog(opts.Init, "Init: ", opts.Init)
 	logger.TestLog(opts.All, "All: ", opts.All)
-	logger.TestLog(opts.Share, "Share: ", opts.Share)
-	logger.TestLog(opts.Sleep != .25, "Sleep: ", opts.Sleep)
 	opts.Globals.TestLog()
 }
 
 func (opts *PinsOptions) ToCmdLine() string {
 	options := ""
-	if opts.List {
-		options += " --list"
-	}
 	if opts.Init {
 		options += " --init"
 	}
 	if opts.All {
 		options += " --all"
-	}
-	if opts.Share {
-		options += " --share"
-	}
-	if opts.Sleep != .25 {
-		options += (" --sleep " + fmt.Sprintf("%.1f", opts.Sleep))
 	}
 	options += " " + strings.Join([]string{}, " ")
 	options += fmt.Sprintf("%s", "") // silence go compiler for auto gen
@@ -65,15 +53,14 @@ func (opts *PinsOptions) ToCmdLine() string {
 
 func FromRequest(w http.ResponseWriter, r *http.Request) *PinsOptions {
 	opts := &PinsOptions{}
-	opts.Sleep = .25
 	for key, value := range r.URL.Query() {
 		switch key {
-		case "list":
-			opts.List = true
 		case "init":
 			opts.Init = true
 		case "all":
 			opts.All = true
+		case "list":
+			opts.List = true
 		case "share":
 			opts.Share = true
 		case "sleep":
