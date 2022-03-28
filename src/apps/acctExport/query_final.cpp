@@ -81,7 +81,7 @@ bool COptions::visitBinaryFile(const string_q& path, void* data) {
         // Note: we used to stop searching on the first hit, and then scan the larger data files for all monitors in
         // this run, but now we keep a map of addresses that were bloom hits and only scan the ones that match.
         for (size_t a = 0; a < possibles.size(); a++) {  // && !hit; a++) { (remove after groking above comment)
-            if (isMember(bloomArray, possibles[a].getBloom())) {
+            if (isInBloom(bloomArray, possibles[a].getBloom())) {
                 hit = true;
                 hitMap[possibles[a].address] = true;
             }

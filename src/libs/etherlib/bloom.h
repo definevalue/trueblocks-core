@@ -28,15 +28,9 @@ class bloom_t {
     bloom_t(const bloom_t& b);
     bloom_t& operator=(const bloom_t& b);
     bool operator==(const bloom_t& item) const;
-    bool operator!=(const bloom_t& item) const {
-        return !operator==(item);
-    }
 
     void lightBit(size_t bit);
-    void unlightBit(size_t bit);
-
     bool isBitLit(size_t bit) const;
-    void toggleBit(size_t bit);
     bool isInBloom(const bloom_t& test) const;
 
   private:
@@ -70,22 +64,9 @@ inline bloom_t& bloom_t::operator=(const bloom_t& b) {
 
 //---------------------------------------------------------------------------
 extern bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits);
-
-//---------------------------------------------------------------------------
-inline bloom_t addr_2_Bloom(const address_t& addrIn) {
-    CUintArray litBits;
-    return addr_2_Bloom(addrIn, litBits);
-}
-
-//----------------------------------------------------------------------
-extern bool addToSet(CBloomArray& blooms, const address_t& addr);
-extern bool isMember(const CBloomArray& blooms, const bloom_t& bloom);
+extern bool addToBloom(CBloomArray& blooms, const address_t& addr);
+extern bool isInBloom(const CBloomArray& blooms, const bloom_t& bloom);
 extern bool writeBloomToBinary(const string_q& fileName, const CBloomArray& blooms);
 extern bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms, bool readBits);
-extern size_t getBloomWidthInBytes(void);
-extern size_t getBloomWidthInBits(void);
-extern size_t getMaxAddrsInBloom(void);
-extern size_t getNibbleWid(void);
-extern size_t getK(void);
 
 }  // namespace qblocks

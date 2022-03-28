@@ -575,7 +575,8 @@ bool CMonitor::isDeleted(void) const {
 bloom_t CMonitor::getBloom(void) {
     bloom_t not_set;
     if (bloom == not_set) {
-        bloom = addr_2_Bloom(address);
+        CUintArray unused;
+        bloom = addr_2_Bloom(address, unused);
     }
     return bloom;
 }
