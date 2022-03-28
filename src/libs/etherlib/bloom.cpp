@@ -85,7 +85,7 @@ bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits) {
 }
 
 //----------------------------------------------------------------------
-bool addToBloom(CBloomArray& blooms, const address_t& addr) {
+bool addToBloomFilter(CBloomArray& blooms, const address_t& addr) {
     CUintArray litBits;
     bloom_t zeroBloom = addr_2_Bloom("0x0", litBits);
     if (blooms.size() == 0)
@@ -103,7 +103,7 @@ bool addToBloom(CBloomArray& blooms, const address_t& addr) {
 }
 
 //----------------------------------------------------------------------
-bool isInBloom(const CBloomArray& blooms, const bloom_t& bloomIn) {
+bool isInBloomFilter(const CBloomArray& blooms, const bloom_t& bloomIn) {
     for (auto bloom : blooms) {
         if (bloom.isInBloom(bloomIn))
             return true;

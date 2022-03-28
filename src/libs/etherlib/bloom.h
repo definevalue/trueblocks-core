@@ -64,8 +64,8 @@ inline bloom_t& bloom_t::operator=(const bloom_t& b) {
 
 //---------------------------------------------------------------------------
 extern bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits);
-extern bool addToBloom(CBloomArray& blooms, const address_t& addr);
-extern bool isInBloom(const CBloomArray& blooms, const bloom_t& bloom);
+extern bool addToBloomFilter(CBloomArray& blooms, const address_t& addr);
+extern bool isInBloomFilter(const CBloomArray& blooms, const bloom_t& bloom);
 extern bool writeBloomToBinary(const string_q& fileName, const CBloomArray& blooms);
 extern bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms, bool readBits);
 
