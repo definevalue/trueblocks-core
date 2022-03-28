@@ -47,12 +47,12 @@ func (opts *GlobalOptions) Output(where io.Writer, format string, data interface
 	case "json":
 		output, err = opts.JsonFormatter(data)
 	case "csv":
-		output, err = opts.CsvFormatter(data)
+		output, err = opts.CsvFormatter(data, false)
 	case "txt":
 		output, err = opts.TxtFormatter(data)
 	// TODO: There is no such case -- this is 'txt' in non-API mode with a terminal
 	case "tab":
-		output, err = opts.TabFormatter(data)
+		output, err = opts.TabFormatter(data, false)
 	default:
 		return fmt.Errorf("unsupported format %s", format)
 	}
@@ -88,7 +88,7 @@ func (opts *GlobalOptions) JsonFormatter(data interface{}) ([]byte, error) {
 // TxtFormatter turns data into TSV string
 func (opts *GlobalOptions) TxtFormatter(data interface{}) ([]byte, error) {
 	out := bytes.Buffer{}
-	tsv, err := opts.AsTsv(data)
+	tsv, err := opts.AsTsv(data, false)
 	if err != nil {
 		return nil, err
 	}
@@ -100,10 +100,10 @@ func (opts *GlobalOptions) TxtFormatter(data interface{}) ([]byte, error) {
 }
 
 // TabFormatter turns data into a table (string)
-func (opts *GlobalOptions) TabFormatter(data interface{}) ([]byte, error) {
+func (opts *GlobalOptions) TabFormatter(data interface{}, hideHeader bool) ([]byte, error) {
 	tabOutput := &bytes.Buffer{}
 	tab := tabwriter.NewWriter(tabOutput, 0, 0, 2, ' ', 0)
-	tsv, err := opts.AsTsv(data)
+	tsv, err := opts.AsTsv(data, hideHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ type CsvFormatted struct {
 // CsvFormatter turns a type into CSV string. It uses custom code instead of
 // Go's encoding/csv to maintain compatibility with C++ output, which
 // quotes each item. encoding/csv would double-quote a quoted string...
-func (opts *GlobalOptions) CsvFormatter(i interface{}) ([]byte, error) {
-	records, err := ToStringRecords(i, true, false)
+func (opts *GlobalOptions) CsvFormatter(i interface{}, hideHeader bool) ([]byte, error) {
+	records, err := ToStringRecords(i, true, hideHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -215,8 +215,8 @@ func (t *Table) Print() error {
 }
 
 // AsTsv turns a type into tab-separated values
-func (opts *GlobalOptions) AsTsv(data interface{}) ([]byte, error) {
-	records, err := ToStringRecords(data, false, false)
+func (opts *GlobalOptions) AsTsv(data interface{}, hideHeader bool) ([]byte, error) {
+	records, err := ToStringRecords(data, false, hideHeader)
 	if err != nil {
 		return nil, err
 	}

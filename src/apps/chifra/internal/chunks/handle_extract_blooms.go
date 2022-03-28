@@ -19,8 +19,8 @@ func (opts *ChunksOptions) HandleChunksExtractBlooms() error {
 
 	bloomPath = cache.NewCachePath(opts.Globals.Chain, cache.Index_Bloom)
 	path = bloomPath.GetFullPath("000000001-000590501")
-	bloomArray.ReadBloomFilter(path)
-	bloomArray.DisplayBloom(1)
+	bloom.ReadBloomFilter(path)
+	bloom.DisplayBloom(1)
 
 	return nil
 }
