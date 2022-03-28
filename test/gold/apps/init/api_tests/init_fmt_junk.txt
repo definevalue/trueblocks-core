@@ -1,6 +1,6 @@
-pins?list&fmt=junk
+init?fmt=junk
 {
   "errors": [
-    "Invalid key (list) in pins route."
+    "The --fmt option (junk) must be one of [ json | txt | csv | api ]"
   ]
 }

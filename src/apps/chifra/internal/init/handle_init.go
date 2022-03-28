@@ -19,6 +19,14 @@ import (
 
 // InitInternal initializes local copy of UnchainedIndex by downloading manifests and chunks
 func (opts *InitOptions) HandleInit() error {
+	if opts.Globals.TestMode {
+		if opts.Globals.ApiMode {
+			opts.Globals.Writer.Write([]byte("{ \"msg\": \"chifra init is not processed in test mode.\" }"))
+		} else {
+			logger.Log(logger.Info, "chifra init is not processed in test mode.")
+		}
+		return nil
+	}
 
 	chain := opts.Globals.Chain
 

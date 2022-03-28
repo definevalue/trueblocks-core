@@ -1,6 +1,0 @@
-pins?list&remote&fmt=json
-{
-  "errors": [
-    "Invalid key (list) in pins route."
-  ]
-}

@@ -1,15 +1,15 @@
 enabled ,mode ,speed ,route ,path/tool ,filename         ,post ,options                                                            ,opt_cmd ,has_env
-on      ,cmd  ,fast  ,pins  ,apps/init ,help             ,n    ,@h
-on      ,cmd  ,fast  ,pins  ,apps/init ,help_long        ,n    ,help
-on      ,both ,fast  ,pins  ,apps/init ,no_params        ,y    ,
-on      ,cmd  ,fast  ,pins  ,apps/init ,invalid_param_1  ,y    ,junk
-on      ,both ,fast  ,pins  ,apps/init ,list_local       ,y    ,list
-on      ,both ,fast  ,pins  ,apps/init ,fmt_default      ,y    ,list
-on      ,both ,slow  ,pins  ,apps/init ,fmt_txt          ,n    ,list & fmt = txt
-on      ,both ,fast  ,pins  ,apps/init ,fmt_csv          ,n    ,list & fmt = csv
-on      ,both ,fast  ,pins  ,apps/init ,fmt_json         ,y    ,list & fmt = json
-on      ,both ,fast  ,pins  ,apps/init ,fmt_api          ,y    ,list & fmt = api
-on      ,both ,fast  ,pins  ,apps/init ,fmt_junk         ,y    ,list & fmt = junk
+on      ,cmd  ,fast  ,init  ,apps/init ,help             ,n    ,@h
+on      ,cmd  ,fast  ,init  ,apps/init ,help_long        ,n    ,help
+on      ,both ,fast  ,init  ,apps/init ,no_params        ,y    ,
+on      ,cmd  ,fast  ,init  ,apps/init ,invalid_param_1  ,y    ,junk
+on      ,both ,fast  ,init  ,apps/init ,list_local       ,y    ,
+on      ,both ,fast  ,init  ,apps/init ,fmt_default      ,y    ,
+on      ,both ,slow  ,init  ,apps/init ,fmt_txt          ,n    ,fmt = txt
+on      ,both ,fast  ,init  ,apps/init ,fmt_csv          ,n    ,fmt = csv
+on      ,both ,fast  ,init  ,apps/init ,fmt_json         ,y    ,fmt = json
+on      ,both ,fast  ,init  ,apps/init ,fmt_api          ,y    ,fmt = api
+on      ,both ,fast  ,init  ,apps/init ,fmt_junk         ,y    ,fmt = junk
 
 #       ,     ,      ,      ,          ,                 ,     ,This test fails because golang code does not support --file option
-local   ,both ,fast  ,pins  ,apps/init ,to_file          ,y    ,list & fmt = json & to_file
+local   ,both ,fast  ,init  ,apps/init ,to_file          ,y    ,list & fmt = json & to_file

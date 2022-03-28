@@ -1,6 +1,4 @@
-pins?list&fmt=api
+init?fmt=api
 {
-  "errors": [
-    "Invalid key (list) in pins route."
-  ]
+  "msg": "chifra init is not processed in test mode."
 }

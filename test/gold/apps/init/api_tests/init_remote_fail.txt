@@ -1,6 +1,0 @@
-pins?list&remote
-{
-  "errors": [
-    "Invalid key (list) in pins route."
-  ]
-}

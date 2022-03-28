@@ -1,6 +1,2 @@
-pins?list&fmt=csv
-{
-  "errors": [
-    "Invalid key (list) in pins route."
-  ]
-}
+init?fmt=csv
+{ "msg": "chifra init is not processed in test mode." }
