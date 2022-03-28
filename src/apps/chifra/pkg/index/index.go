@@ -3,7 +3,7 @@ package index
 import (
 	"os"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 )
 
 const (
@@ -32,15 +32,15 @@ const (
 type IndexChunk struct {
 	File           *os.File
 	Header         HeaderRecord
-	Range          blockRange.FileRange
+	Range          cache.FileRange
 	AddrTableStart int64
 	AppTableStart  int64
 }
 
-// LoadIndexHeader returns an IndexChunk with an opened file pointer to the given fileName. The HeaderRecord
+// NewIndexChunk returns an IndexChunk with an opened file pointer to the given fileName. The HeaderRecord
 // for the chunk has been populated and the file position to the two tables are ready for use.
-func LoadIndexHeader(fileName string) (IndexChunk, error) {
-	blkRange, err := blockRange.RangeFromFilename(fileName)
+func NewIndexChunk(fileName string) (chunk IndexChunk, err error) {
+	blkRange, err := cache.RangeFromFilename(fileName)
 	if err != nil {
 		return IndexChunk{}, err
 	}
@@ -49,7 +49,7 @@ func LoadIndexHeader(fileName string) (IndexChunk, error) {
 	if err != nil {
 		return IndexChunk{}, err
 	}
-	// Note, we don't defer closing here since we want the file to stay opened.
+	// Note, we don't defer closing here since we want the file to stay opened. Caller has to close it.
 
 	header, err := readHeader(file)
 	if err != nil {
@@ -57,7 +57,7 @@ func LoadIndexHeader(fileName string) (IndexChunk, error) {
 		return IndexChunk{}, err
 	}
 
-	chunk := IndexChunk{
+	chunk = IndexChunk{
 		File:           file,
 		Header:         header,
 		AddrTableStart: HeaderWidth,
@@ -65,7 +65,7 @@ func LoadIndexHeader(fileName string) (IndexChunk, error) {
 		Range:          blkRange,
 	}
 
-	return chunk, nil
+	return
 }
 
 // Close closes the IndexChunk's associated File pointer (if opened)

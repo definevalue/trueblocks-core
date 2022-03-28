@@ -34,9 +34,7 @@ class bloom_t {
 
     void lightBit(size_t bit);
     void unlightBit(size_t bit);
-    size_t nBitsHit(void) const;
 
-    void showBloom(ostream& os, size_t first, size_t cnt) const;
     bool isBitLit(size_t bit) const;
     void toggleBit(size_t bit);
     bool isInBloom(const bloom_t& test) const;
@@ -83,7 +81,7 @@ inline bloom_t addr_2_Bloom(const address_t& addrIn) {
 extern bool addToSet(CBloomArray& blooms, const address_t& addr);
 extern bool isMember(const CBloomArray& blooms, const bloom_t& bloom);
 extern bool writeBloomToBinary(const string_q& fileName, const CBloomArray& blooms);
-extern bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms);
+extern bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms, bool readBits);
 extern size_t getBloomWidthInBytes(void);
 extern size_t getBloomWidthInBits(void);
 extern size_t getMaxAddrsInBloom(void);

@@ -63,9 +63,8 @@ func (opts *PinsOptions) HandlePinsInit() error {
 	defer close(indexDoneChannel)
 
 	getChunks := func(chunkType cache.CacheType) {
-		chunkPath := &cache.Path{}
-		chunkPath.New(chain, chunkType)
-		failedChunks, cancelled := downloadAndReportProgress(chain, downloadedManifest.NewPins, chunkPath)
+		chunkPath := cache.NewCachePath(chain, chunkType)
+		failedChunks, cancelled := downloadAndReportProgress(chain, downloadedManifest.NewPins, &chunkPath)
 
 		if cancelled {
 			// We don't want to retry if the user has cancelled
@@ -75,20 +74,20 @@ func (opts *PinsOptions) HandlePinsInit() error {
 		if len(failedChunks) > 0 {
 			retry(failedChunks, 3, func(pins []manifest.PinDescriptor) ([]manifest.PinDescriptor, bool) {
 				logger.Log(logger.Info, "Retrying", len(pins), "bloom(s)")
-				return downloadAndReportProgress(chain, pins, chunkPath)
+				return downloadAndReportProgress(chain, pins, &chunkPath)
 			})
 		}
 	}
 
 	go func() {
-		getChunks(cache.BloomChunk)
+		getChunks(cache.Index_Bloom)
 
 		bloomsDoneChannel <- true
 	}()
 
 	if opts.All {
 		go func() {
-			getChunks(cache.IndexChunk)
+			getChunks(cache.Index_Final)
 
 			indexDoneChannel <- true
 		}()
@@ -102,10 +101,10 @@ func (opts *PinsOptions) HandlePinsInit() error {
 type downloadFunc func(pins []manifest.PinDescriptor) (failed []manifest.PinDescriptor, cancelled bool)
 
 // Downloads chunks and report progress
-func downloadAndReportProgress(chain string, pins []manifest.PinDescriptor, chunkPath *cache.Path) ([]manifest.PinDescriptor, bool) {
+func downloadAndReportProgress(chain string, pins []manifest.PinDescriptor, chunkPath *cache.CachePath) ([]manifest.PinDescriptor, bool) {
 	chunkTypeToDescription := map[cache.CacheType]string{
-		cache.BloomChunk: "bloom",
-		cache.IndexChunk: "index",
+		cache.Index_Bloom: "bloom",
+		cache.Index_Final: "index",
 	}
 	failed := []manifest.PinDescriptor{}
 	cancelled := false

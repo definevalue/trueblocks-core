@@ -61,7 +61,7 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
             return true;
 
         CBloomArray blooms;
-        readBloomFromBinary(path, blooms);
+        readBloomFromBinary(path, blooms)
 
         ostringstream os;
         cout << "range: {" << startBlock << " " << endBlock << "}" << endl;

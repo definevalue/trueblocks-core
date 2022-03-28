@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 )
 
 type bloomBytes struct {
@@ -18,7 +18,7 @@ type bloomBytes struct {
 }
 
 type BloomFilter struct {
-	Range  blockRange.FileRange
+	Range  cache.FileRange
 	Count  uint32
 	Blooms []bloomBytes
 }
@@ -27,8 +27,8 @@ const (
 	BLOOM_WIDTH_IN_BYTES = (1048576 / 8)
 )
 
-func (bloom *BloomFilter) ReadBloomArray(fileName string) (err error) {
-	bloom.Range, err = blockRange.RangeFromFilename(fileName)
+func (bloom *BloomFilter) ReadBloomFilter(fileName string) (err error) {
+	bloom.Range, err = cache.RangeFromFilename(fileName)
 	if err != nil {
 		return err
 	}

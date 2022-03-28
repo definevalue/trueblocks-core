@@ -48,7 +48,7 @@ class CThing {
     uint64_t totalBits(void) const {
         size_t ret = 0;
         for (auto bloom : blooms) {
-            ret += bloom.nBitsHit();
+            ret += 1;
         }
         return ret;
     }
@@ -92,7 +92,7 @@ static bool bloomVisitFunc(const string_q& path, void* data) {
 
         string_q chunkPath = substitute(substitute(path, "blooms", "finalized"), ".bloom", ".bin");
 
-        readBloomFromBinary(path, thing.blooms);
+        readBloomFromBinary(path, thing.blooms, false /* readBits */);
         readIndexHeader(chunkPath, thing.header);
 
         size_t recordSize = (sizeof(uint32_t) + getBloomWidthInBytes());

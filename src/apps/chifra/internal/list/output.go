@@ -14,7 +14,7 @@ import (
 	"net/http"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/internal/globals"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
@@ -29,7 +29,7 @@ type MonitorUpdate struct {
 	maxTasks   int
 	monitorMap AddressMonitorMap
 	Globals    globals.GlobalOptions
-	Range      blockRange.FileRange
+	Range      cache.FileRange
 }
 
 // EXISTING_CODE
@@ -86,8 +86,4 @@ func ServeList(w http.ResponseWriter, r *http.Request) bool {
 }
 
 // EXISTING_CODE
-func RangesIntersect(r1, r2 blockRange.FileRange) bool {
-	return !(r1.Last < r2.First || r1.First > r2.Last)
-}
-
 // EXISTING_CODE

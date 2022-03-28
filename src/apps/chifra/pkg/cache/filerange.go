@@ -2,7 +2,7 @@
 // Use of this source code is governed by a license that can
 // be found in the LICENSE file.
 
-package blockRange
+package cache
 
 import (
 	"errors"
@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
+// TODO: BOGUS I don't like using uint64s everywhere
 type FileRange struct {
-	// TODO: BOGUS I don't like using uint64s everywhere
 	First uint64
 	Last  uint64
 }
@@ -37,4 +37,12 @@ func RangeFromFilename(path string) (blkRange FileRange, err error) {
 	}
 
 	return
+}
+
+func Intersects(r1, r2 FileRange) bool {
+	return !(r1.Last < r2.First || r1.First > r2.Last)
+}
+
+func BlockIntersects(r FileRange, blk uint64) bool {
+	return !(blk < r.First || blk > r.Last)
 }

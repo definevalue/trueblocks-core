@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/config"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/utils"
 )
@@ -37,8 +37,8 @@ type MetaValue struct {
 }
 
 func DistanceFromHead(chain string) uint64 {
-    meta := GetMetaData(chain, false)
-    return meta.Latest - meta.Finalized
+	meta := GetMetaData(chain, false)
+	return meta.Latest - meta.Finalized
 }
 
 func GetMetaData(chain string, testmode bool) *MetaData {
@@ -117,7 +117,7 @@ func walkIndexFolder(chain, folder string, valueChan chan<- MetaValue) {
 			return err
 		}
 		if !info.IsDir() {
-			blkRange, _ := blockRange.RangeFromFilename(path)
+			blkRange, _ := cache.RangeFromFilename(path)
 			valueChan <- MetaValue{folder: folder, value: uint64(blkRange.Last)}
 		}
 		return nil

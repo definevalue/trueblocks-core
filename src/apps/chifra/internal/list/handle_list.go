@@ -45,9 +45,9 @@ func (opts *ListOptions) HandleListAppearances(monitorArray []monitor.Monitor) e
 
 		results := make([]SimpleAppearance, 0, mon.Count)
 		for _, app := range apps {
-			// range1 := blockRange.FileRange{First: opts.FirstBlock, Last: opts.LastBlock}
-			// range2 := blockRange.FileRange{First: uint64(app.BlockNumber), Last: uint64(app.BlockNumber)}
-			// if RangesIntersect(range1, range2) {
+			// range1 := cache.FileRange{First: opts.FirstBlock, Last: opts.LastBlock}
+			// range2 := cache.FileRange{First: uint64(app.BlockNumber), Last: uint64(app.BlockNumber)}
+			// if Intersects(range1, range2) {
 			var s SimpleAppearance
 			s.Address = mon.GetAddrStr()
 			s.BlockNumber = app.BlockNumber

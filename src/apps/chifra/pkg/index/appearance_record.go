@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -37,7 +37,7 @@ func (chunk *IndexChunk) readAppearanceRecords(addrRecord *AddressRecord) (apps 
 // ResultRecord carries the appearances found in a single IndexChunk for the given address.
 type ResultRecord struct {
 	Address    common.Address
-	Range      blockRange.FileRange
+	Range      cache.FileRange
 	AppRecords *[]AppearanceRecord
 }
 

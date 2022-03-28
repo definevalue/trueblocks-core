@@ -27,7 +27,7 @@ class COptions : public CBlockOptions {
     string_q extract;
     // END_CODE_DECLARE
 
-    blknum_t last;
+    blknum_t last{0};
     CPinnedChunkArray pins;
 
     COptions(void);

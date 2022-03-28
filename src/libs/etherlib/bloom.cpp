@@ -46,13 +46,6 @@ bool bloom_t::operator==(const bloom_t& test) const {
 }
 
 //---------------------------------------------------------------------------
-void bloom_t::showBloom(ostream& os, size_t first, size_t cnt) const {
-    for (size_t i = first; i < first + cnt; i++) {
-        os << byte_2_Bits(bits[i]) << " ";
-    }
-}
-
-//---------------------------------------------------------------------------
 void bloom_t::lightBit(size_t bit) {
     size_t which = (bit / 8);
     size_t whence = (bit % 8);
@@ -85,19 +78,6 @@ void bloom_t::toggleBit(size_t bit) {
         unlightBit(bit);
     else
         lightBit(bit);
-}
-
-//---------------------------------------------------------------------------
-size_t bloom_t::nBitsHit(void) const {
-    size_t cnt = 0;
-    for (size_t b = 0; b < BLOOM_WIDTH_IN_BYTES; b++) {
-        string_q bitStr = byte_2_Bits(bits[b]);
-        for (auto ch : bitStr) {
-            if (ch == '1')
-                cnt++;
-        }
-    }
-    return cnt;
 }
 
 //---------------------------------------------------------------------------
@@ -151,7 +131,7 @@ bool isMember(const CBloomArray& blooms, const bloom_t& bloomIn) {
 }
 
 //----------------------------------------------------------------------------------
-bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms) {
+bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms, bool readBits) {
     blooms.clear();
     CArchive bloomCache(READING_ARCHIVE);
     if (bloomCache.Lock(fileName, modeReadOnly, LOCK_NOWAIT)) {
@@ -160,7 +140,11 @@ bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms) {
         for (size_t i = 0; i < nBlooms; i++) {
             bloom_t bloom;
             bloomCache.Read(bloom.nInserted);
-            bloomCache.Read(bloom.bits, sizeof(uint8_t), BLOOM_WIDTH_IN_BYTES);
+            if (readBits) {
+                bloomCache.Read(bloom.bits, sizeof(uint8_t), BLOOM_WIDTH_IN_BYTES);
+            } else {
+                bloomCache.Seek(BLOOM_WIDTH_IN_BYTES, SEEK_CUR);
+            }
             blooms.push_back(bloom);
         }
         bloomCache.Close();

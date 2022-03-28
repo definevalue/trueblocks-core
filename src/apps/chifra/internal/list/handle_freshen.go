@@ -12,7 +12,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/blockRange"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/colors"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/config"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/index"
@@ -25,7 +25,7 @@ func (opts *ListOptions) HandleFreshenMonitors(monitorArray *[]monitor.Monitor) 
 	updater.writer = os.Stdout
 	updater.maxTasks = 12
 	updater.monitorMap = make(AddressMonitorMap, len(opts.Addrs))
-	updater.Range = blockRange.FileRange{First: opts.FirstBlock, Last: opts.LastBlock}
+	updater.Range = cache.FileRange{First: opts.FirstBlock, Last: opts.LastBlock}
 	updater.Globals = opts.Globals
 	for _, addr := range opts.Addrs {
 		if updater.monitorMap[common.HexToAddress(addr)] == nil {
@@ -49,18 +49,18 @@ func (opts *ListOptions) HandleFreshenMonitors(monitorArray *[]monitor.Monitor) 
 	for _, info := range files {
 		if !info.IsDir() {
 			indexFileName := indexPath + "/" + info.Name()
-			fileRange, err := blockRange.RangeFromFilename(indexFileName)
+			fR, err := cache.RangeFromFilename(indexFileName)
 			if err != nil {
 				// don't respond further -- there may be foreign files in the folder
 				fmt.Println(err)
 				continue
 			}
 
-			if updater.Globals.TestMode && fileRange.Last > 5000000 {
+			if updater.Globals.TestMode && fR.Last > 5000000 {
 				continue
 			}
 
-			if !RangesIntersect(updater.Range, fileRange) {
+			if !cache.Intersects(updater.Range, fR) {
 				continue
 			}
 
@@ -98,7 +98,7 @@ func (updater *MonitorUpdate) visitChunkToFreshenFinal(fileName string, resultCh
 		resultChannel <- results
 	}()
 
-	indexChunk, err := index.LoadIndexHeader(fileName)
+	indexChunk, err := index.NewIndexChunk(fileName)
 	if err != nil {
 		log.Println(err)
 		return
