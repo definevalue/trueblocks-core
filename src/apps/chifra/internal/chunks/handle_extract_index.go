@@ -1,22 +1,29 @@
-/*-------------------------------------------------------------------------------------------
- * qblocks - fast, easily-accessible, fully-decentralized data from blockchains
- * copyright (c) 2016, 2021 TrueBlocks, LLC (http://trueblocks.io)
- *
- * This program is free software: you may redistribute it and/or modify it under the terms
- * of the GNU General Public License as published by the Free Software Foundation, either
- * version 3 of the License, or (at your option) any later version. This program is
- * distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details. You should have received a copy of the GNU General
- * Public License along with this program. If not, see http://www.gnu.org/licenses/.
- *-------------------------------------------------------------------------------------------*/
-#include "options.h"
+// Copyright 2021 The TrueBlocks Authors. All rights reserved.
+// Use of this source code is governed by a license that can
+// be found in the LICENSE file.
 
-//----------------------------------------------------------------
-static bool chunkVisitFunc(const string_q& path, void* data) {
+package chunksPkg
+
+/*
+if (share) {
+	string_q res := doCommand("which ipfs");
+	if (res.empty()) {
+		return usa ge("Could not find ipfs in your $PATH. You must install ipfs for the --share command to work.");
+	}
+}
+
+if (share) {
+	ostringstream os;
+	os << "ipfs add -Q --pin \"" << bloomFn + "\"";
+	string_q newHash = doCommand(os.str());
+	LOG_INFO(cGreen, "Re-pinning ", pin.fileName, cOff, " ==> ", newHash, " ",
+	(pin.bloomHash == newHash ? greenCheck : redX));
+}
+
+static bool chunkV isitFunc(const string_q& path, void* data) {
     // LOG_WARN(path);
     if (endsWith(path, "/")) {
-        return forEveryFileInFolder(path + "*", chunkVisitFunc, data);
+        return forEveryFileInFolder(path + "*", chunkV isitFunc, data);
 
     } else {
         if (!endsWith(path, ".bin"))
@@ -76,14 +83,4 @@ static bool chunkVisitFunc(const string_q& path, void* data) {
 
     return true;
 }
-
-//----------------------------------------------------------------
-bool COptions::handle_extract() {
-    if (extract == "stats") {
-        return handle_stats();
-    } else {
-        return forEveryFileInFolder(indexFolder_finalized, chunkVisitFunc, this);
-    }
-    LOG_PROG("Finished");
-    return true;
-}
+*/

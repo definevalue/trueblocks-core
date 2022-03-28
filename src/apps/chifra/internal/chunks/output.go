@@ -13,6 +13,7 @@ import (
 	"net/http"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/validate"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ func RunChunks(cmd *cobra.Command, args []string) error {
 		return opts.HandleChunksExtract(opts.showStats)
 	}
 
-	return opts.Globals.PassItOn("chunkMan", opts.ToCmdLine())
+	return validate.Usage("Extractor for {0} not yet implemented.", opts.Extract)
 	// EXISTING_CODE
 }
 
@@ -68,26 +69,11 @@ func ServeChunks(w http.ResponseWriter, r *http.Request) bool {
 		}
 		return true
 	}
-	// opts.Globals.PassItOn("chunkMan", opts.ToCmdLine())
-	return false
+
+	opts.Globals.RespondWithError(w, http.StatusInternalServerError, validate.Usage("Extractor for {0} not yet implemented.", opts.Extract))
+	return true
 	// EXISTING_CODE
 }
 
 // EXISTING_CODE
-/*
-if (share) {
-	    string_q res := doCommand("which ipfs");
-	    if (res.empty()) {
-	        return usa ge("Could not find ipfs in your $PATH. You must install ipfs for the --share command to work.");
-		}
-	}
-	if (share) {
-	    ostringstream os;
-	    os << "ipfs add -Q --pin \"" << bloomFn + "\"";
-	    string_q newHash = doCommand(os.str());
-	    LOG_INFO(cGreen, "Re-pinning ", pin.fileName, cOff, " ==> ", newHash, " ",
-	         (pin.bloomHash == newHash ? greenCheck : redX));
-	}
-
-*/
 // EXISTING_CODE
