@@ -38,5 +38,4 @@ class COptions : public CBlockOptions {
 
     bool handle_stats(void);
     bool handle_extract(void);
-    bool readCache(void);
 };

@@ -63,7 +63,7 @@ func (bloom *BloomFilter) ReadBloomFilter(fileName string) (err error) {
 
 const bytesPerLine = (2048 / 64)
 
-func (bloom *BloomFilter) DebugPrint() {
+func (bloom *BloomFilter) DisplayBloom() {
 	fmt.Println("range:", bloom.Range)
 	fmt.Println("nBlooms:", bloom.Count)
 	fmt.Println("byteWidth:", BLOOM_WIDTH_IN_BYTES)
