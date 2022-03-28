@@ -31,6 +31,8 @@ func RunChunks(cmd *cobra.Command, args []string) error {
 		return opts.HandleChunksExtract(opts.showBloom)
 	} else if opts.Extract == "pins" {
 		return opts.HandleChunksExtractPins()
+	} else if opts.Extract == "stats" {
+		return opts.HandleChunksExtract(opts.showStats)
 	}
 
 	return opts.Globals.PassItOn("chunkMan", opts.ToCmdLine())
@@ -59,6 +61,12 @@ func ServeChunks(w http.ResponseWriter, r *http.Request) bool {
 			logger.Log(logger.Warning, "Could not extract pin list", err)
 		}
 		return true
+	} else if opts.Extract == "stats" {
+		err = opts.HandleChunksExtract(opts.showStats)
+		if err != nil {
+			logger.Log(logger.Warning, "Could not extract stats", err)
+		}
+		return true
 	}
 	// opts.Globals.PassItOn("chunkMan", opts.ToCmdLine())
 	return false
@@ -67,67 +75,6 @@ func ServeChunks(w http.ResponseWriter, r *http.Request) bool {
 
 // EXISTING_CODE
 /*
-bool COptions::handle_list(void) {
-    ASSERT(pins.size());  // local pins have already been loaded
-    for (auto pin : pins) {
-        if (!isJson()) {
-            cout << trim(pin.Format(expContext().fmtMap["format"]), '\t') << endl;
-        } else {
-            cout << ((isJson() && !firstOut) ? ", " : "");
-            indent();
-            pin.toJson(cout);
-            unindent();
-        }
-        firstOut = false;
-    }
-    return false;
-}
-
-//----------------------------------------------------------------
-bool COptions::hand le_check() {
-    bool enabled = getGlobalConfig("chunkMan")->getConfigBool("enabled", "download_manifest", true);
-    if (!enabled) {
-        LOG_INFO("Manifest not downloaded. Not initializing.");
-        return true;
-    }
-
-    establishIndexFolders();
-
-    // If the user is calling here, she wants a fresh read even if we've not just freshened.
-    pins12.clear();
-    pinlib_readManifest(pins12);
-    for (auto pin : pins12) {
-        string_q source = indexFolder_blooms + pin.fileName + ".bloom";
-        copyFile(source, "./thisFile");
-        source = "./thisFile";
-        string_q cmd1 = "rm -f ./thisFile.gz";  // + " 2>/dev/null";
-        if (system(cmd1.c_str())) {
-        }                                      // Don't remove cruft. Silences compiler warnings
-        cmd1 = "yes | gzip -n -k ./thisFile";  // + " 2>/dev/null";
-        if (system(cmd1.c_str())) {
-        }                              // Don't remove cruft. Silences compiler warnings
-        cmd1 = "ls -l ./thisFile.gz";  // + " 2>/dev/null";
-        if (system(cmd1.c_str())) {
-        }                                                         // Don't remove cruft. Silences compiler warnings
-        cmd1 = "/usr/local/bin/ipfs add thisFile.gz >/tmp/file";  // + " 2>/dev/null";
-        if (system(cmd1.c_str())) {
-        }  // Don't remove cruft. Silences compiler warnings
-        // clang-format on
-        LOG_INFO("zip: ", source + ".gz", " ", fileExists(source + ".gz"));
-        string_q ret = asciiFileToString("/tmp/file");
-        if (ret != pin.bloomHash) {
-            cerr << endl;
-            cerr << "bloom hashes mismatch for file " << pin.fileName << endl;
-            cerr << "\tret: " << ret << endl;
-            cerr << "\tpin: " << pin.bloomHash << endl;
-            cerr << endl;
-        }
-    }
-
-    LOG_INFO(bBlue, "Pins were checked.                                           ", cOff);
-    return true;  // do not continue
-}
-
 if (share) {
 	    string_q res := doCommand("which ipfs");
 	    if (res.empty()) {

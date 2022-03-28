@@ -22,6 +22,10 @@ import (
 
 // Output converts data into the given format and writes to where writer
 func (opts *GlobalOptions) Output(where io.Writer, format string, data interface{}) error {
+	return opts.Output2(where, format, data, false)
+}
+
+func (opts *GlobalOptions) Output2(where io.Writer, format string, data interface{}, hideHeader bool) error {
 	nonEmptyFormat := format
 	if format == "" || format == "none" {
 		if utils.IsApiMode() {
@@ -47,12 +51,12 @@ func (opts *GlobalOptions) Output(where io.Writer, format string, data interface
 	case "json":
 		output, err = opts.JsonFormatter(data)
 	case "csv":
-		output, err = opts.CsvFormatter(data, false)
+		output, err = opts.CsvFormatter(data, hideHeader)
 	case "txt":
-		output, err = opts.TxtFormatter(data)
+		output, err = opts.TxtFormatter(data, hideHeader)
 	// TODO: There is no such case -- this is 'txt' in non-API mode with a terminal
 	case "tab":
-		output, err = opts.TabFormatter(data, false)
+		output, err = opts.TabFormatter(data, hideHeader)
 	default:
 		return fmt.Errorf("unsupported format %s", format)
 	}
@@ -86,9 +90,9 @@ func (opts *GlobalOptions) JsonFormatter(data interface{}) ([]byte, error) {
 }
 
 // TxtFormatter turns data into TSV string
-func (opts *GlobalOptions) TxtFormatter(data interface{}) ([]byte, error) {
+func (opts *GlobalOptions) TxtFormatter(data interface{}, hideHeader bool) ([]byte, error) {
 	out := bytes.Buffer{}
-	tsv, err := opts.AsTsv(data, false)
+	tsv, err := opts.AsTsv(data, hideHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -384,6 +388,20 @@ func (opts *GlobalOptions) Respond(w http.ResponseWriter, httpStatus int, respon
 	w.Header().Set("Content-Type", formatToMimeType[formatNotEmpty])
 	opts.Format = formatNotEmpty
 	err := opts.Output(w, opts.Format, responseData)
+	if err != nil {
+		opts.RespondWithError(w, http.StatusInternalServerError, err)
+	}
+}
+
+func (opts *GlobalOptions) Respond2(w http.ResponseWriter, httpStatus int, responseData interface{}, hideHeader bool) {
+	formatNotEmpty := opts.Format
+	if formatNotEmpty == "" {
+		formatNotEmpty = "api"
+	}
+
+	w.Header().Set("Content-Type", formatToMimeType[formatNotEmpty])
+	opts.Format = formatNotEmpty
+	err := opts.Output2(w, opts.Format, responseData, hideHeader)
 	if err != nil {
 		opts.RespondWithError(w, http.StatusInternalServerError, err)
 	}

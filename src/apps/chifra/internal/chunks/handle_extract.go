@@ -8,12 +8,14 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 )
 
-func (opts *ChunksOptions) HandleChunksExtract(displayFunc func(path string)) error {
+func (opts *ChunksOptions) HandleChunksExtract(displayFunc func(path string, first bool)) error {
 	blocks := cache.Convert(opts.Blocks)
 	filenameChan := make(chan cache.IndexFileInfo)
 
+	var nRoutines int = 1
 	go cache.WalkCacheFolder(opts.Globals.Chain, cache.Index_Bloom, filenameChan)
 
+	i := 0
 	for result := range filenameChan {
 		switch result.Type {
 		case cache.Index_Bloom:
@@ -23,10 +25,14 @@ func (opts *ChunksOptions) HandleChunksExtract(displayFunc func(path string)) er
 				hit = hit || h
 			}
 			if len(blocks) == 0 || hit {
-				displayFunc(result.Path)
+				displayFunc(result.Path, i == 0)
+				i++
 			}
 		case cache.None:
-			close(filenameChan)
+			nRoutines--
+			if nRoutines == 0 {
+				close(filenameChan)
+			}
 		}
 	}
 
