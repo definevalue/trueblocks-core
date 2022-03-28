@@ -1,0 +1,15 @@
+enabled ,mode ,speed ,route ,path/tool ,filename         ,post ,options                                                            ,opt_cmd ,has_env
+on      ,cmd  ,fast  ,pins  ,apps/init ,help             ,n    ,@h
+on      ,cmd  ,fast  ,pins  ,apps/init ,help_long        ,n    ,help
+on      ,both ,fast  ,pins  ,apps/init ,no_params        ,y    ,
+on      ,cmd  ,fast  ,pins  ,apps/init ,invalid_param_1  ,y    ,junk
+on      ,both ,fast  ,pins  ,apps/init ,list_local       ,y    ,list
+on      ,both ,fast  ,pins  ,apps/init ,fmt_default      ,y    ,list
+on      ,both ,slow  ,pins  ,apps/init ,fmt_txt          ,n    ,list & fmt = txt
+on      ,both ,fast  ,pins  ,apps/init ,fmt_csv          ,n    ,list & fmt = csv
+on      ,both ,fast  ,pins  ,apps/init ,fmt_json         ,y    ,list & fmt = json
+on      ,both ,fast  ,pins  ,apps/init ,fmt_api          ,y    ,list & fmt = api
+on      ,both ,fast  ,pins  ,apps/init ,fmt_junk         ,y    ,list & fmt = junk
+
+#       ,     ,      ,      ,          ,                 ,     ,This test fails because golang code does not support --file option
+local   ,both ,fast  ,pins  ,apps/init ,to_file          ,y    ,list & fmt = json & to_file

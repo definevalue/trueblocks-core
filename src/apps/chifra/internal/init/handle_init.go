@@ -2,7 +2,7 @@
 // Use of this source code is governed by a license that can
 // be found in the LICENSE file.
 
-package pinsPkg
+package initPkg
 
 import (
 	"net/url"
@@ -18,7 +18,7 @@ import (
 )
 
 // InitInternal initializes local copy of UnchainedIndex by downloading manifests and chunks
-func (opts *PinsOptions) HandlePinsInit() error {
+func (opts *InitOptions) HandleInit() error {
 
 	chain := opts.Globals.Chain
 
@@ -183,7 +183,7 @@ func retry(failedPins []manifest.PinDescriptor, times uint, downloadChunks downl
 	return len(pinsToRetry)
 }
 
-func (opts *PinsOptions) PrintManifestHeader() {
+func (opts *InitOptions) PrintManifestHeader() {
 	// The following two values should be read the manifest, however right now only
 	// TSV format is available for download and it lacks this information
 	// TODO: These values should be in a config file

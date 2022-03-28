@@ -2,7 +2,7 @@
 title: "Admin"
 description: ""
 lead: ""
-date: 2022-03-26T15:26:59
+date: 2022-03-28T00:52:51
 lastmod:
   - :git
   - lastmod
@@ -157,8 +157,7 @@ Flags:
   -h, --help         display this help screen
 
 Notes:
-  - chifra init is an alias for the chifra pins --init command.
-  - See chifra pins --help for more information.
+  - Re-run chifra init as often as you wish. It will repair or freshen the index.
 ```
 
 **Source code**: [`internal/init`](https://github.com/TrueBlocks/trueblocks-core/tree/master/src/apps/chifra/internal/init)
