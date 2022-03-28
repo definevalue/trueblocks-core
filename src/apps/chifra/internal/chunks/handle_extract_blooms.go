@@ -9,7 +9,7 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 )
 
-func (opts *ChunksOptions) showBloom(path string) {
+func (opts *ChunksOptions) showBloom(path string, first bool) {
 	if opts.Globals.TestMode {
 		r, _ := cache.RangeFromFilename(path)
 		if r.First > 1 {
