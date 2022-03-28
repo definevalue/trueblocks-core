@@ -12,8 +12,7 @@ import (
 
 func Test_Bloom(t *testing.T) {
 	bloomPath := cache.NewCachePath("mainnet", cache.Index_Bloom)
-	path := bloomPath.GetFullPath("000000000-000000000")
 
 	var blooms BloomFilter
-	blooms.ReadBloomFilter(path)
+	blooms.ReadBloomFilter(bloomPath.GetFullPath("000000000-000000000"))
 }

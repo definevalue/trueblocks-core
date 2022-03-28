@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 )
@@ -61,23 +62,36 @@ func (bloom *BloomFilter) ReadBloomFilter(fileName string) (err error) {
 	return nil
 }
 
-const bytesPerLine = (2048 / 64)
+func (bloom *BloomFilter) DisplayBloom(verbose int) {
+	var bytesPerLine = (2048 / 16)
+	if verbose > 0 {
+		if verbose > 4 {
+			bytesPerLine = 128
+		} else {
+			bytesPerLine = 32
+		}
+	}
 
-func (bloom *BloomFilter) DisplayBloom() {
+	nInserted := uint32(0)
+	for i := uint32(0); i < bloom.Count; i++ {
+		nInserted += bloom.Blooms[i].NInserted
+	}
 	fmt.Println("range:", bloom.Range)
 	fmt.Println("nBlooms:", bloom.Count)
 	fmt.Println("byteWidth:", BLOOM_WIDTH_IN_BYTES)
-	for i := uint32(0); i < bloom.Count; i++ {
-		fmt.Println("nInserted:", bloom.Blooms[i].NInserted)
-		for j := 0; j < len(bloom.Blooms[i].Bytes); j++ {
-			if (j % bytesPerLine) == 0 {
-				if j != 0 {
-					fmt.Println()
+	fmt.Println("nInserted:", nInserted)
+	if verbose > 0 {
+		for i := uint32(0); i < bloom.Count; i++ {
+			for j := 0; j < len(bloom.Blooms[i].Bytes); j++ {
+				if (j % bytesPerLine) == 0 {
+					if j != 0 {
+						fmt.Println()
+					}
 				}
-				fmt.Printf("% 7d: ", j)
+				ch := bloom.Blooms[i].Bytes[j]
+				str := fmt.Sprintf("%08b", ch)
+				fmt.Printf("%s ", strings.Replace(str, "0", ".", -1))
 			}
-			ch := bloom.Blooms[i].Bytes[j]
-			fmt.Printf("%08b ", ch)
 		}
 		fmt.Println()
 	}

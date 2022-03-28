@@ -123,7 +123,7 @@ type CsvFormatted struct {
 // Go's encoding/csv to maintain compatibility with C++ output, which
 // quotes each item. encoding/csv would double-quote a quoted string...
 func (opts *GlobalOptions) CsvFormatter(i interface{}) ([]byte, error) {
-	records, err := ToStringRecords(i, true)
+	records, err := ToStringRecords(i, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (t *Table) Print() error {
 
 // AsTsv turns a type into tab-separated values
 func (opts *GlobalOptions) AsTsv(data interface{}) ([]byte, error) {
-	records, err := ToStringRecords(data, false)
+	records, err := ToStringRecords(data, false, false)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +305,7 @@ func MakeFirstUpperCase(s string) string {
 // ToStringRecords uses Reflect API to read data from the provided slice of structs and
 // turns it into a slice of string slices that can be later passed to encoding package
 // writers to convert between different output formats
-func ToStringRecords(data interface{}, quote bool) ([][]string, error) {
+func ToStringRecords(data interface{}, quote bool, hideHeader bool) ([][]string, error) {
 	var records [][]string
 	// We can quote the data now, so that we don't have to loop over it again
 	// later.
@@ -344,8 +344,9 @@ func ToStringRecords(data interface{}, quote bool) ([][]string, error) {
 		records = append(records, record)
 	}
 
-	result := [][]string{
-		header,
+	var result [][]string
+	if !hideHeader {
+		result = append(result, header)
 	}
 	result = append(result, records...)
 	return result, nil

@@ -21,7 +21,7 @@ func TestToStringRecords(t *testing.T) {
 		{"second first", "second second"},
 	}
 
-	result, err := ToStringRecords(input, false)
+	result, err := ToStringRecords(input, false, false)
 	if err != nil {
 		t.Error(err)
 		return
