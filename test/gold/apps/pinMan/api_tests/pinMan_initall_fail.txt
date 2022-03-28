@@ -1,6 +1,0 @@
-pins?list&initAll
-{
-  "errors": [
-    "Invalid key (initAll) in pins route."
-  ]
-}

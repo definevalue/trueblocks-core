@@ -1,0 +1,6 @@
+pins?list&remote&fmt=csv
+{
+  "errors": [
+    "Invalid key (list) in pins route."
+  ]
+}

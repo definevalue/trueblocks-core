@@ -1,0 +1,6 @@
+pins?list&fmt=junk
+{
+  "errors": [
+    "Invalid key (list) in pins route."
+  ]
+}

@@ -1,6 +1,0 @@
-pins?list&remote&fmt=txt
-{
-  "errors": [
-    "Invalid key (remote) in pins route."
-  ]
-}

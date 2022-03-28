@@ -1,6 +1,0 @@
-pins?list&freshen
-{
-  "errors": [
-    "Invalid key (freshen) in pins route."
-  ]
-}

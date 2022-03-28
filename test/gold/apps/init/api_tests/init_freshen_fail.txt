@@ -1,0 +1,6 @@
+pins?list&freshen
+{
+  "errors": [
+    "Invalid key (list) in pins route."
+  ]
+}
