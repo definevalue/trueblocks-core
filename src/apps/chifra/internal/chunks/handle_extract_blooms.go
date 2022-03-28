@@ -9,18 +9,15 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
 )
 
-func (opts *ChunksOptions) HandleChunksExtractBlooms() error {
-	bloomPath := cache.NewCachePath(opts.Globals.Chain, cache.Index_Bloom)
-	path := bloomPath.GetFullPath("000000000-000000000")
+func (opts *ChunksOptions) showBloom(path string) {
+	if opts.Globals.TestMode {
+		r, _ := cache.RangeFromFilename(path)
+		if r.First > 1 {
+			return
+		}
+	}
 
 	var bloom bloomPkg.BloomFilter
 	bloom.ReadBloomFilter(path)
 	bloom.DisplayBloom(int(opts.Globals.LogLevel))
-
-	bloomPath = cache.NewCachePath(opts.Globals.Chain, cache.Index_Bloom)
-	path = bloomPath.GetFullPath("000000001-000590501")
-	bloom.ReadBloomFilter(path)
-	bloom.DisplayBloom(1)
-
-	return nil
 }

@@ -28,7 +28,7 @@ func RunChunks(cmd *cobra.Command, args []string) error {
 
 	// EXISTING_CODE
 	if opts.Extract == "blooms" {
-		return opts.HandleChunksExtractBlooms()
+		return opts.HandleChunksExtract(opts.showBloom)
 	} else if opts.Extract == "pins" {
 		return opts.HandleChunksExtractPins()
 	}
@@ -48,7 +48,7 @@ func ServeChunks(w http.ResponseWriter, r *http.Request) bool {
 
 	// EXISTING_CODE
 	if opts.Extract == "blooms" {
-		err = opts.HandleChunksExtractBlooms()
+		err = opts.HandleChunksExtract(opts.showBloom)
 		if err != nil {
 			logger.Log(logger.Warning, "Could not extract blooms", err)
 		}
