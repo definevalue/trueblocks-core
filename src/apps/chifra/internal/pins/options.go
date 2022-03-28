@@ -21,11 +21,6 @@ type PinsOptions struct {
 	Init    bool
 	All     bool
 	List    bool
-	Share   bool
-	Sleep   float64
-	Freshen bool
-	Remote  bool
-	InitAll bool
 	Globals globals.GlobalOptions
 	BadFlag error
 }
@@ -53,7 +48,7 @@ func (opts *PinsOptions) ToCmdLine() string {
 
 func FromRequest(w http.ResponseWriter, r *http.Request) *PinsOptions {
 	opts := &PinsOptions{}
-	for key, value := range r.URL.Query() {
+	for key, _ := range r.URL.Query() {
 		switch key {
 		case "init":
 			opts.Init = true
@@ -61,16 +56,6 @@ func FromRequest(w http.ResponseWriter, r *http.Request) *PinsOptions {
 			opts.All = true
 		case "list":
 			opts.List = true
-		case "share":
-			opts.Share = true
-		case "sleep":
-			opts.Sleep = globals.ToFloat64(value[0])
-		case "freshen":
-			opts.Freshen = true
-		case "remote":
-			opts.Remote = true
-		case "initAll":
-			opts.InitAll = true
 		default:
 			if !globals.IsGlobalOption(key) {
 				opts.BadFlag = validate.Usage("Invalid key ({0}) in {1} route.", key, "pins")

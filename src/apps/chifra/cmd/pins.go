@@ -46,18 +46,8 @@ func init() {
 	pinsCmd.Flags().BoolVarP(&pinsPkg.GetOptions().Init, "init", "i", false, "download the blooms or index chunks from IPFS")
 	pinsCmd.Flags().BoolVarP(&pinsPkg.GetOptions().All, "all", "a", false, "in addition to Bloom filters, download full index chunks")
 	pinsCmd.Flags().BoolVarP(&pinsPkg.GetOptions().List, "list", "l", false, "list the bloom and index hashes from local cache or IPFS (hidden)")
-	pinsCmd.Flags().BoolVarP(&pinsPkg.GetOptions().Share, "share", "S", false, "share downloaded data by pinning it to IPFS (the IPFS daemon must be running) (hidden)")
-	pinsCmd.Flags().Float64VarP(&pinsPkg.GetOptions().Sleep, "sleep", "s", .25, "throttle requests by this many seconds (hidden)")
-	pinsCmd.Flags().BoolVarP(&pinsPkg.GetOptions().Freshen, "freshen", "f", false, "check for new bloom or index chunks and download if available (hidden)")
-	pinsCmd.Flags().BoolVarP(&pinsPkg.GetOptions().Remote, "remote", "r", false, "for --list mode only, recover the manifest from IPFS via UnchainedIndex smart contract (hidden)")
-	pinsCmd.Flags().BoolVarP(&pinsPkg.GetOptions().InitAll, "init_all", "n", false, "use --init --all instead (hidden)")
 	if os.Getenv("TEST_MODE") != "true" {
 		pinsCmd.Flags().MarkHidden("list")
-		pinsCmd.Flags().MarkHidden("share")
-		pinsCmd.Flags().MarkHidden("sleep")
-		pinsCmd.Flags().MarkHidden("freshen")
-		pinsCmd.Flags().MarkHidden("remote")
-		pinsCmd.Flags().MarkHidden("init_all")
 	}
 	globals.InitGlobals(pinsCmd, &pinsPkg.GetOptions().Globals)
 

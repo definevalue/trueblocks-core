@@ -43,14 +43,6 @@ func RunPins(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if opts.Sleep != .25 {
-		logger.Fatal("Not implemented")
-	}
-
-	if opts.Share {
-		logger.Fatal("Not implemented")
-	}
-
 	return nil
 	// EXISTING_CODE
 }

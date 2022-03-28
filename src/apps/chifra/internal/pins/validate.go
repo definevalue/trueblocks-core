@@ -15,19 +15,6 @@ func (opts *PinsOptions) ValidatePins() error {
 		return opts.BadFlag
 	}
 
-	if opts.InitAll {
-		return validate.Deprecated("--init_all", "--init --all")
-
-	} else if opts.Freshen {
-		return validate.Deprecated("--freshen", "--init")
-
-	} else if opts.Remote {
-		return validate.Deprecated("--remote", "")
-
-	} else if opts.Share {
-		return validate.Usage("The --share flag has been deprecated. See the chifra chunks command instead.")
-	}
-
 	if opts.List && opts.Init {
 		return validate.Usage("Please choose only one of {0}.", "--list or --init")
 	}
