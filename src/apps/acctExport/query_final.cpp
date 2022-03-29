@@ -76,7 +76,7 @@ bool COptions::visitBinaryFile(const string_q& path, void* data) {
     string_q indexPath = substitute(substitute(path, indexFolder_blooms, indexFolder_finalized), ".bloom", ".bin");
     if (fileExists(bloomPath)) {
         CBloomArray bloomArray;
-        readBloomFromBinary(bloomPath, bloomArray, true /* readBits */);
+        readBloomFilter(bloomPath, bloomArray, true /* readBits */);
         bool hit = false;
         // Note: we used to stop searching on the first hit, and then scan the larger data files for all monitors in
         // this run, but now we keep a map of addresses that were bloom hits and only scan the ones that match.

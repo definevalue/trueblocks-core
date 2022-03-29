@@ -344,10 +344,10 @@ bool writeIndexAsBinary(const string_q& outFn, const CStringArray& lines, CONSTA
     // We've built the data in a temporary file. We do this in case we're interrupted during the building of the
     // data so it's not corrupted. In this way, we only move the data to its final resting place once. It's safer.
     string_q bloomFile = substitute(substitute(outFn, "/finalized/", "/blooms/"), ".bin", ".bloom");
-    lockSection();                          // disallow control+c
-    writeBloomToBinary(bloomFile, blooms);  // write the bloom file
-    copyFile(tmpFile2, outFn);              // move the index file
-    ::remove(tmpFile2.c_str());             // remove the tmp file
+    lockSection();                        // disallow control+c
+    writeBloomFilter(bloomFile, blooms);  // write the bloom file
+    copyFile(tmpFile2, outFn);            // move the index file
+    ::remove(tmpFile2.c_str());           // remove the tmp file
     unlockSection();
 
     return (pinFunc ? ((*pinFunc)(outFn, pinFuncData)) : true);
