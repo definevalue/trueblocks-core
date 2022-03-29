@@ -2,16 +2,17 @@
 cmake_minimum_required (VERSION 3.0)
 
 # application project
-project (showBlooms)
+project (bloomTest)
 
 # The sources to be used
 file(GLOB SOURCE_FILES "*.cpp")
 
 # Output
-set(EXECUTABLE_OUTPUT_PATH "${BIN_CMDS_DIR}")
+set(EXECUTABLE_OUTPUT_PATH "${BIN_TEST_DIR}")
 
 # Define the executable to be generated
-set(TOOL_NAME "showBlooms")
+set(TOOL_NAME "bloomTest")
+set(PROJ_NAME "libs/etherlib")
 add_executable(${TOOL_NAME} ${SOURCE_FILES})
 
 # Add the project static libs at linking

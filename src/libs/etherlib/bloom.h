@@ -30,7 +30,6 @@ class bloom_t {
     bool operator==(const bloom_t& item) const;
 
     void lightBit(size_t bit);
-    bool isBitLit(size_t bit) const;
     bool isInBloom(const bloom_t& test) const;
 
   private:
@@ -66,7 +65,7 @@ inline bloom_t& bloom_t::operator=(const bloom_t& b) {
 extern bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits);
 extern bool addToBloomFilter(CBloomArray& blooms, const address_t& addr);
 extern bool isInBloomFilter(const CBloomArray& blooms, const bloom_t& bloom);
-extern bool writeBloomToBinary(const string_q& fileName, const CBloomArray& blooms);
-extern bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms, bool readBits);
+extern bool writeBloomFilter(const string_q& fileName, const CBloomArray& blooms);
+extern bool readBloomFilter(const string_q& fileName, CBloomArray& blooms, bool readBits);
 
 }  // namespace qblocks

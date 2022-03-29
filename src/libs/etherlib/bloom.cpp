@@ -53,18 +53,20 @@ void bloom_t::lightBit(size_t bit) {
 }
 
 //---------------------------------------------------------------------------
-bool bloom_t::isBitLit(size_t bit) const {
-    size_t which = (bit / 8);
+static bool isBitLit(size_t bit, uint8_t* bits) {
     size_t whence = (bit % 8);
-    size_t index = BLOOM_WIDTH_IN_BYTES - which - 1;
     uint8_t mask = uint8_t(1 << whence);
+
+    size_t which = (bit / 8);
+    size_t index = BLOOM_WIDTH_IN_BYTES - which - 1;
+
     return (bits[index] & mask);
 }
 
 //---------------------------------------------------------------------------
 bool bloom_t::isInBloom(const bloom_t& test) const {
     for (size_t b = 0; b < BLOOM_WIDTH_IN_BITS; b++)
-        if (test.isBitLit(b) && !isBitLit(b))
+        if (isBitLit(b, test.bits) && !isBitLit(b, bits))
             return false;
     return true;
 }
@@ -84,13 +86,14 @@ bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits) {
     return ret;
 }
 
+static CUintArray unused;
+static const bloom_t zeroBloom = addr_2_Bloom("0x0", unused);
 //----------------------------------------------------------------------
 bool addToBloomFilter(CBloomArray& blooms, const address_t& addr) {
-    CUintArray litBits;
-    bloom_t zeroBloom = addr_2_Bloom("0x0", litBits);
     if (blooms.size() == 0)
         blooms.push_back(zeroBloom);  // so we have something to add to
 
+    CUintArray litBits;
     addr_2_Bloom(addr, litBits);
     for (auto bit : litBits)
         blooms[blooms.size() - 1].lightBit(bit);
@@ -112,7 +115,7 @@ bool isInBloomFilter(const CBloomArray& blooms, const bloom_t& bloomIn) {
 }
 
 //----------------------------------------------------------------------------------
-bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms, bool readBits) {
+bool readBloomFilter(const string_q& fileName, CBloomArray& blooms, bool readBits) {
     blooms.clear();
     CArchive bloomCache(READING_ARCHIVE);
     if (bloomCache.Lock(fileName, modeReadOnly, LOCK_NOWAIT)) {
@@ -135,7 +138,7 @@ bool readBloomFromBinary(const string_q& fileName, CBloomArray& blooms, bool rea
 }
 
 //----------------------------------------------------------------------
-bool writeBloomToBinary(const string_q& fileName, const CBloomArray& blooms) {
+bool writeBloomFilter(const string_q& fileName, const CBloomArray& blooms) {
     lockSection();
     CArchive output(WRITING_ARCHIVE);
     if (!output.Lock(fileName, modeWriteCreate, LOCK_NOWAIT)) {
