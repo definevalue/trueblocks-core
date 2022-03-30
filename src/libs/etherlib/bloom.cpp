@@ -89,7 +89,7 @@ bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits) {
 static CUintArray unused;
 static const bloom_t zeroBloom = addr_2_Bloom("0x0", unused);
 //----------------------------------------------------------------------
-bool addToBloomFilter(CBloomArray& blooms, const address_t& addr) {
+bool addAddrToBloom(CBloomArray& blooms, const address_t& addr) {
     if (blooms.size() == 0)
         blooms.push_back(zeroBloom);  // so we have something to add to
 

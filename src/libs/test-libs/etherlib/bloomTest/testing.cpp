@@ -34,7 +34,7 @@ int main(int argc, const char* argv[]) {
         CUintArray bits;
         bloom_t b = addr_2_Bloom2(addr, bits);
         if (!(i % 2)) {
-            addToBloomFilter(blooms, addr);
+            addAddrToBloom(blooms, addr);
         }
         addrBlooms.push_back(b);
     }

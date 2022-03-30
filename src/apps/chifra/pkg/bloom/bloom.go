@@ -26,7 +26,8 @@ type BloomFilter struct {
 }
 
 const (
-	BLOOM_WIDTH_IN_BYTES = (1048576 / 8)
+	BLOOM_WIDTH_IN_BITS  = (1048576)
+	BLOOM_WIDTH_IN_BYTES = (BLOOM_WIDTH_IN_BITS / 8)
 )
 
 func NewBloomFilter() BloomFilter {
@@ -38,7 +39,7 @@ func NewBloomFilter() BloomFilter {
 
 func NewBloomFilterFromAddress(addr common.Address) BloomFilter {
 	ret := NewBloomFilter()
-	ret.addToBloomFilter(addr)
+	ret.addAddrToBloom(addr)
 	return ret
 }
 
@@ -69,7 +70,7 @@ func chunkBytes(addr common.Address, chunkSize int) [][]byte {
 //     cout << endl;
 //     return ret;
 // }
-func (bloom *BloomFilter) addToBloomFilter(addr common.Address) error {
+func (bloom *BloomFilter) addAddrToBloom(addr common.Address) error {
 	return nil
 }
 

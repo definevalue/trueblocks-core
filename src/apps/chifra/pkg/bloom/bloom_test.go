@@ -68,9 +68,12 @@ func Test_Bloom(t *testing.T) {
 
 	for _, tt := range tests {
 		got := ""
-		out := chunkBytes(tt.Addr, 4)
-		for _, o := range out {
-			got += fmt.Sprintf("%x-%d-%d ", o, binary.BigEndian.Uint32(o), (binary.BigEndian.Uint32(o) % ((1048576 / 8) * 8)))
+		fourBytes := chunkBytes(tt.Addr, 4)
+		for _, fourByte := range fourBytes {
+			fourByteAsUint32 := binary.BigEndian.Uint32(fourByte)
+			widthInBits := uint32(BLOOM_WIDTH_IN_BITS)
+			bitToLight := (fourByteAsUint32 % widthInBits)
+			got += fmt.Sprintf("%x-%d-%d ", fourByte, fourByteAsUint32, bitToLight)
 		}
 		fmt.Println(strings.ToLower(tt.Addr.Hex()), got)
 

@@ -51,5 +51,8 @@ One of [ stats | pins | blooms | index | header | addresses | appearances ]`)
 	chunksCmd.SetUsageTemplate(UsageWithNotes(notesChunks))
 	chunksCmd.SetOut(os.Stderr)
 
+	// EXISTING_CODE
+	// EXISTING_CODE
+
 	chifraCmd.AddCommand(chunksCmd)
 }
