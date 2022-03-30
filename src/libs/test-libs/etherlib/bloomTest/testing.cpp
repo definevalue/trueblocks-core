@@ -57,17 +57,15 @@ int main(int argc, const char* argv[]) {
 //---------------------------------------------------------------------------
 bloom_t addr_2_Bloom2(const address_t& addr, CUintArray& litBits) {
     bloom_t ret;
-    string_q splitted, bitss;
+    cout << addr << " ";
     for (size_t k = 0; k < K; k++) {
         string_q four_byte = extract(addr, 2 + (k * NIBBLE_WID), NIBBLE_WID);
-        uint64_t bit = (str_2_Uint("0x" + four_byte) % BLOOM_WIDTH_IN_BITS);
+        uint64_t bit64 = str_2_Uint("0x" + four_byte);
+        uint64_t bit = (bit64 % BLOOM_WIDTH_IN_BITS);
         ret.lightBit(bit);
         litBits.push_back(bit);
-        splitted += four_byte + "|";
-        bitss += uint_2_Str(bit) + "|";
-        if (k == (K - 1)) {
-            cout << addr << "\t" << splitted << "\t" << bitss << endl;
-        }
+        cout << four_byte << "-" << uint_2_Str(bit64) << "-" << uint_2_Str(bit) << " ";
     }
+    cout << endl;
     return ret;
 }

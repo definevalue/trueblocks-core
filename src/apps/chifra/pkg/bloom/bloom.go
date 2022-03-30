@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/cache"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type bloomBytes struct {
@@ -27,6 +28,50 @@ type BloomFilter struct {
 const (
 	BLOOM_WIDTH_IN_BYTES = (1048576 / 8)
 )
+
+func NewBloomFilter() BloomFilter {
+	var ret BloomFilter
+	ret.Blooms = make([]bloomBytes, 1)
+	ret.Count = 1
+	return ret
+}
+
+func NewBloomFilterFromAddress(addr common.Address) BloomFilter {
+	ret := NewBloomFilter()
+	ret.addToBloomFilter(addr)
+	return ret
+}
+
+func chunkBytes(addr common.Address, chunkSize int) [][]byte {
+	var chunks [][]byte
+	slice := addr.Bytes()
+	for i := 0; i < len(slice); i += chunkSize {
+		end := i + chunkSize
+		if end > len(slice) {
+			end = len(slice)
+		}
+		chunks = append(chunks, slice[i:end])
+	}
+	return chunks
+}
+
+// bloom_t addr_2_Bloom2(const address_t& addr, CUintArray& litBits) {
+//     bloom_t ret;
+//     cout << addr << " ";
+//     for (size_t k = 0; k < K; k++) {
+//         string_q four_byte = extract(addr, 2 + (k * NIBBLE_WID), NIBBLE_WID);
+//         uint64_t bit64 = str_2_Uint("0x" + four_byte);
+//         uint64_t bit = (bit64 % BLOOM_WIDTH_IN_BITS);
+//         ret.lightBit(bit);
+//         litBits.push_back(bit);
+//         cout << four_byte << "-" << uint_2_Str(bit64) << "-" << uint_2_Str(bit) << " ";
+//     }
+//     cout << endl;
+//     return ret;
+// }
+func (bloom *BloomFilter) addToBloomFilter(addr common.Address) error {
+	return nil
+}
 
 func (bloom *BloomFilter) ReadBloomFilter(fileName string) (err error) {
 	bloom.Range, err = cache.RangeFromFilename(fileName)
