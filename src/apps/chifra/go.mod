@@ -8,13 +8,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
-<<<<<<< HEAD
-=======
-	github.com/ipfs/go-ipfs-api v0.3.0 // indirect
-	github.com/libp2p/go-libp2p-metrics v0.0.1 // indirect
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/multiformats/go-multiaddr-net v0.0.1 // indirect
->>>>>>> 8e2bbf56a... WIP: chunk write
+	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/panjf2000/ants/v2 v2.4.6
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0

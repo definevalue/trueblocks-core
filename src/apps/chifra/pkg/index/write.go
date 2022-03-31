@@ -1,9 +1,12 @@
-package chunk
+package index
 
 import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func Write(addressToAppearances map[string][]AppearanceRecord) (*bytes.Buffer, error) {
@@ -20,15 +23,15 @@ func Write(addressToAppearances map[string][]AppearanceRecord) (*bytes.Buffer, e
 		if err != nil {
 			return nil, err
 		}
-		ethAddr := EthAddress{}
+		ethAddr := common.Address{}
 		copy(ethAddr[:], addressHex)
 
 		// Append record to address table. Note that StartRecord is just total
 		// number of previous records (counting from 0)
 		addressTable = append(addressTable, AddressRecord{
-			Address:         ethAddr,
-			StartRecord:     uint32(appearanceCount),
-			NumberOfRecords: uint32(len(appearances)),
+			Address: ethAddr,
+			Offset:  uint32(appearanceCount),
+			Count:   uint32(len(appearances)),
 		})
 		appearanceCount += len(appearances)
 
@@ -38,11 +41,11 @@ func Write(addressToAppearances map[string][]AppearanceRecord) (*bytes.Buffer, e
 
 	// This is our main buffer. We will write all chunk contents there
 	buf := bytes.Buffer{}
-	header := Header{
-		Magic:               MagicNumber,
-		Hash:                EthHash{},
-		NumberOfAddresses:   uint32(len(addressToAppearances)),
-		NumberOfAppearances: uint32(appearanceCount),
+	header := HeaderRecord{
+		Magic:           file.MagicNumber,
+		Hash:            common.Hash{},
+		AddressCount:    uint32(len(addressToAppearances)),
+		AppearanceCount: uint32(appearanceCount),
 	}
 
 	// Write header

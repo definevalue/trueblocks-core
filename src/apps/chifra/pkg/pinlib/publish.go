@@ -74,9 +74,9 @@ type pinDescriptorFragment struct {
 	Cid       manifest.IpfsHash
 }
 
-func prepareChunksByType(cacheType cache.CacheType, existingManifest *manifest.Manifest) ([]pinDescriptorFragment, error) {
+func prepareChunksByType(chain string, cacheType cache.CacheType, existingManifest *manifest.Manifest) ([]pinDescriptorFragment, error) {
 	cachePath := cache.Path{}
-	cachePath.New(cacheType)
+	cachePath.New(chain, cacheType)
 	ctx, cancel := context.WithCancel(context.Background())
 	poolSize := 4
 
@@ -153,7 +153,7 @@ func prepareChunksByType(cacheType cache.CacheType, existingManifest *manifest.M
 
 		// - add to ipfs
 
-		ipfsShell := ipfs.Connect(config.ReadTrueBlocks().Settings.IpfsNode)
+		ipfsShell := ipfs.Connect(config.GetRootConfig().Settings.IpfsNode)
 		cid, err := ipfsShell.Add(bytes.NewReader(archive.Bytes()))
 		if err != nil {
 			progressChannel <- progress.Progress{
