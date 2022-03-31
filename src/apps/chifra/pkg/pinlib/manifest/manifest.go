@@ -5,6 +5,8 @@
 package manifest
 
 import (
+	"encoding/json"
+
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/internal/globals"
 )
 
@@ -14,19 +16,21 @@ type PinDescriptor struct {
 	FileName  string   `json:"fileName"`
 	BloomHash IpfsHash `json:"bloomHash"`
 	IndexHash IpfsHash `json:"indexHash"`
+	// file size
+	// md5 (gzipped file)
 }
 
 type Manifest struct {
-	// TODO: This structure will be updated with better data shortly
-	FileName           string        `json:"fileName"`
-	IndexFormat        IpfsHash      `json:"indexFormat"`
-	BloomFormat        IpfsHash      `json:"bloomFormat"`
-	CommitHash         string        `json:"commitHash"`
-	PreviousHash       IpfsHash      `json:"prevHash"`
-	NewBlockRange      ManifestRange `json:"newBlockRange"`
-	PreviousBlockRange ManifestRange `json:"prevBlockRange"`
-	NewPins            PinsList      `json:"newPins"`
-	PreviousPins       PinsList      `json:"prevPins"`
+	Version     json.Number   `json:"version"`
+	Chain       string        `json:"chain"`
+	ChainId     json.Number   `json:"chainId"` // not sure
+	IndexFormat IpfsHash      `json:"indexFormat"`
+	BloomFormat IpfsHash      `json:"bloomFormat"`
+	CommitHash  string        `json:"commitHash"`
+	BlockRange  ManifestRange `json:"blockRange"`
+	Names       IpfsHash      `json:"names"`
+	Timestamps  IpfsHash      `json:"timestamps"`
+	Pins        PinsList      `json:"pins"`
 }
 
 type PinsList []PinDescriptor

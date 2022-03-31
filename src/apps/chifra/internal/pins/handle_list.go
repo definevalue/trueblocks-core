@@ -10,32 +10,32 @@ import (
 	"sort"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/pinlib/manifest"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/pinlib"
 )
 
-func (opts *PinsOptions) HandlePinsList() error {
-	manifestData, err := manifest.FromLocalFile(opts.Globals.Chain)
+func (opts *PinsOptions) ListInternal() error {
+	manifestData, err := pinlib.ReadLocalManifest()
 	if err != nil {
 		return err
 	}
 
-	sort.Slice(manifestData.NewPins, func(i, j int) bool {
-		iPin := manifestData.NewPins[i]
-		jPin := manifestData.NewPins[j]
+	sort.Slice(manifestData.Pins, func(i, j int) bool {
+		iPin := manifestData.Pins[i]
+		jPin := manifestData.Pins[j]
 		return iPin.FileName < jPin.FileName
 	})
 
 	if opts.Globals.TestMode {
 		// Shorten the array for testing
-		manifestData.NewPins = manifestData.NewPins[:100]
+		manifestData.Pins = manifestData.Pins[:100]
 	}
 
 	opts.PrintManifestHeader()
 	if opts.Globals.ApiMode {
-		opts.Globals.Respond(opts.Globals.Writer, http.StatusOK, manifestData.NewPins)
+		opts.Globals.Respond(opts.Globals.Writer, http.StatusOK, manifestData.Pins)
 
 	} else {
-		err = opts.Globals.Output(os.Stdout, opts.Globals.Format, manifestData.NewPins)
+		err = opts.Globals.Output(os.Stdout, opts.Globals.Format, manifestData.Pins)
 		if err != nil {
 			logger.Log(logger.Error, err)
 		}

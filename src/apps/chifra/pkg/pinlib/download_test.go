@@ -59,7 +59,7 @@ func TestDownloadJSON(t *testing.T) {
 		t.Error(err)
 	}
 
-	if l := len(manifest.NewPins); l != 2 {
+	if l := len(manifest.Pins); l != 2 {
 		t.Errorf("Wrong NewPins length: %d", l)
 	}
 }
@@ -77,7 +77,7 @@ func TestDownloadTab(t *testing.T) {
 		t.Error(err)
 	}
 
-	if l := len(manifest.NewPins); l != 7 {
+	if l := len(manifest.Pins); l != 7 {
 		t.Errorf("Wrong NewPins length: %d", l)
 	}
 }
