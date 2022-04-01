@@ -89,39 +89,4 @@ bool CIndexArchive::ReadIndexFromBinary(const string_q& path, indexparts_t parts
     return true;
 }
 
-//--------------------------------------------------------------
-bool readIndexHeader(const string_q& path, CIndexHeader& header) {
-    header.nApps = header.nAddrs = (uint32_t)-1;
-    if (contains(path, "blooms")) {
-        return false;
-    }
-
-    if (endsWith(path, ".txt")) {
-        header.nApps = (uint32_t)fileSize(path) / (uint32_t)asciiAppearanceSize;
-        CStringArray lines;
-        asciiFileToLines(path, lines);
-        CAddressBoolMap addrMap;
-        for (auto line : lines)
-            addrMap[nextTokenClear(line, '\t')] = true;
-        header.nAddrs = (uint32_t)addrMap.size();
-        return true;
-    }
-
-    CArchive archive(READING_ARCHIVE);
-    if (!archive.Lock(path, modeReadOnly, LOCK_NOWAIT))
-        return false;
-
-    bzero(&header, sizeof(header));
-    // size_t nRead =
-    archive.Read(&header, sizeof(header), 1);
-    // if (false) { //nRead != sizeof(header)) {
-    //    cerr << "Could not read file: " << path << endl;
-    //    return;
-    //}
-    ASSERT(header.magic == MAGIC_NUMBER);
-    // ASSERT(bytes_2_Hash(h->hash) == versionHash);
-    archive.Release();
-    return true;
-}
-
 }  // namespace qblocks

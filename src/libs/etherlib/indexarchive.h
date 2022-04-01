@@ -65,22 +65,5 @@ class CIndexArchive : public CArchive {
 //-----------------------------------------------------------------------
 #define MAGIC_NUMBER ((uint32_t)str_2_Uint("0xdeadbeef"))
 extern hash_t versionHash;
-//--------------------------------------------------------------
-typedef bool (*INDEXCHUNKFUNC)(CIndexArchive& chunk, void* data);
-typedef bool (*INDEXBLOOMFUNC)(CBloomFilter& blooms, void* data);
-typedef bool (*ADDRESSFUNC)(const address_t& addr, void* data);
-class CChunkVisitor {
-  public:
-    INDEXCHUNKFUNC indexFunc = nullptr;
-    ADDRESSFUNC addrFunc = nullptr;
-    void* callData = nullptr;
-    blkrange_t range = make_pair(0, NOPOS);
-};
-extern bool readIndexHeader(const string_q& inFn, CIndexHeader& header);
-}  // namespace qblocks
 
-#if 0
-// extern bool forEveryIndexChunk(INDEXCHUNKFUNC func, void* data);
-// extern bool forEveryAddressInIndex(ADDRESSFUNC func, const blkrange_t& range, void* data);
-// extern bool forEverySmartContractInIndex(ADDRESSFUNC func, void* data);
-#endif
+}  // namespace qblocks
