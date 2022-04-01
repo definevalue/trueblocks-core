@@ -18,7 +18,7 @@
 #define END 14493256
 
 int main(int argc, const char* argv[]) {
-    loadEnvironmentPaths("mainnet", "/Users/jrush/Development/trueblocks-core/build/shit/");
+    loadEnvironmentPaths();
     etherlib_init(quickQuitHandler);
     for (size_t i = START; i < END; i++) {
         CBlock block;

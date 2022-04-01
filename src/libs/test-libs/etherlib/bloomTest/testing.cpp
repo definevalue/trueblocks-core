@@ -35,7 +35,7 @@ class CBloomStats {
 
 //------------------------------------------------------------------------
 int main(int argc, const char* argv[]) {
-    loadEnvironmentPaths("", "");
+    loadEnvironmentPaths();
     etherlib_init(quickQuitHandler);
 
     CStringArray addrsInSet{"0x0371a82e4a9d0a4312f3ee2ac9c6958512891372", "0x3d493c51a916f86d6d1c04824b3a7431e61a3ca3",
