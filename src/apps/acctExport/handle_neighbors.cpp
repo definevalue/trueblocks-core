@@ -24,90 +24,6 @@ bool showApp(const CAppearance& item, void* data) {
 extern bool getChunkRanges(CBlockRangeArray& ranges);
 
 //-----------------------------------------------------------------------
-int sortRecords(const void* i1, const void* i2) {
-    int32_t* p1 = (int32_t*)i1;
-    int32_t* p2 = (int32_t*)i2;
-    if (p1[1] == p2[1]) {
-        if (p1[2] == p2[2]) {
-            return (p1[0] - p2[0]);
-        }
-        return p1[2] - p2[2];
-    }
-    return p1[1] - p2[1];
-}
-
-//-----------------------------------------------------------------------
-bool CIndexArchive::LoadReverseMaps(const blkrange_t& range) {
-    if (reverseAppMap) {
-        delete[] reverseAppMap;
-        reverseAddrRanges.clear();
-        reverseAppMap = nullptr;
-    }
-
-    uint32_t nAppsHere = header->nRows;
-
-    string_q mapFile = substitute(getFilename(), indexFolder_finalized, indexFolder_map);
-    if (fileExists(mapFile)) {
-        CArchive archive(READING_ARCHIVE);
-        if (!archive.Lock(mapFile, modeReadOnly, LOCK_NOWAIT)) {
-            LOG_ERR("Could not open file ", mapFile);
-            return false;
-        }
-        size_t nRecords = fileSize(mapFile) / sizeof(CReverseAppMapEntry);
-        ASSERT(nRecords == nAppsHere);
-        // Cleaned up on destruction of the chunk
-        reverseAppMap = new CReverseAppMapEntry[nRecords];
-        if (!reverseAppMap) {
-            LOG_ERR("Could not allocate memory for CReverseAppMapEntry");
-            return false;
-        }
-        archive.Read((char*)reverseAppMap, sizeof(char), nRecords * sizeof(CReverseAppMapEntry));
-        archive.Release();
-        blknum_t cur = 0;
-        for (uint32_t i = 0; i < nAddrs; i++) {
-            blkrange_t r;
-            r.first = cur + addresses[i].offset;
-            r.second = r.first + addresses[i].cnt - 1;
-            reverseAddrRanges.push_back(r);
-        }
-        return true;
-    }
-
-    // Cleaned up on destruction of the chunk
-    reverseAppMap = new CReverseAppMapEntry[nAppsHere];
-    if (!reverseAppMap) {
-        LOG_ERR("Could not allocate memory for CReverseAppMapEntry");
-        return false;
-    }
-    for (uint32_t i = 0; i < nAppsHere; i++) {
-        reverseAppMap[i].n = i;
-        reverseAppMap[i].blk = appearances[i].blk;
-        reverseAppMap[i].tx = appearances[i].txid;
-    }
-
-    blknum_t cur = 0;
-    for (uint32_t i = 0; i < nAddrs; i++) {
-        blkrange_t r;
-        r.first = cur + addresses[i].offset;
-        r.second = r.first + addresses[i].cnt - 1;
-        reverseAddrRanges.push_back(r);
-    }
-
-    qsort(reverseAppMap, nAppsHere, sizeof(CReverseAppMapEntry), sortRecords);
-
-    CArchive archive(WRITING_ARCHIVE);
-    if (!archive.Lock(mapFile, modeWriteCreate, LOCK_WAIT)) {
-        LOG_ERR("Could not open file ", mapFile);
-        return false;
-    }
-    archive.Write(reverseAppMap, sizeof(char), nAppsHere * sizeof(CReverseAppMapEntry));
-    archive.Release();
-
-    LOG_PROG("Processed: " + getFilename());
-    return true;
-}
-
-//-----------------------------------------------------------------------
 int compareEntry(const CReverseAppMapEntry* a, const CReverseAppMapEntry* b) {
     int ret = int(a->blk) - int(b->blk);
     if (ret)
@@ -203,7 +119,7 @@ bool COptions::showAddrsInTx(CTraverser* trav, const blkrange_t& range, const CA
             theIndex = nullptr;
         }
         theIndex = new CIndexArchive(READING_ARCHIVE);
-        if (theIndex->ReadIndexFromBinary(chunkPath)) {
+        if (theIndex->ReadIndexFromBinary(chunkPath, IP_ALL)) {
             theIndex->LoadReverseMaps(range);
             if (!theIndex->reverseAppMap) {
                 LOG_ERR("Could not allocate reverseAppMap");
@@ -217,7 +133,7 @@ bool COptions::showAddrsInTx(CTraverser* trav, const blkrange_t& range, const CA
     CReverseAppMapEntry search;
     search.blk = app.blk;
     search.tx = app.txid;
-    CReverseAppMapEntry* found = (CReverseAppMapEntry*)bsearch(&search, theIndex->reverseAppMap, theIndex->nApps,
+    CReverseAppMapEntry* found = (CReverseAppMapEntry*)bsearch(&search, theIndex->reverseAppMap, theIndex->header.nApps,
                                                                sizeof(CReverseAppMapEntry), findRevMapEntry);
 
     if (found) {
@@ -233,7 +149,8 @@ bool COptions::showAddrsInTx(CTraverser* trav, const blkrange_t& range, const CA
         }
 
         size_t start = 0;
-        CReverseAppMapEntry* endOfRevMap = theIndex->reverseAppMap + (theIndex->nApps * sizeof(CReverseAppMapEntry));
+        CReverseAppMapEntry* endOfRevMap =
+            theIndex->reverseAppMap + (theIndex->header.nApps * sizeof(CReverseAppMapEntry));
         while (found < endOfRevMap && isSame(found, &search)) {
             for (size_t i = start; i < theIndex->reverseAddrRanges.size(); i++) {
                 blkrange_t* r = &theIndex->reverseAddrRanges[i];

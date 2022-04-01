@@ -415,7 +415,7 @@ bool noteIndex(const string_q& path, void* data) {
 
         CIndexHeader header;
         readIndexHeader(path, header);
-        aci.nApps = header.nRows;
+        aci.nApps = header.nApps;
         aci.nAddrs = header.nAddrs;
         counter->indexArray->push_back(aci);
     }

@@ -45,7 +45,7 @@ static bool chunkV isitFunc(const string_q& path, void* data) {
         }
 
         CIndexArchive index(READING_ARCHIVE);
-        if (index.ReadIndexFromBinary(path)) {
+        if (index.ReadIndexFromBinary(path, IP_ALL)) {
             string_q msg = "start: {0} end: {1} fileSize: {2} bloomSize: {3} nAddrs: {4} nRows: {5}";
             replace(msg, "{0}", "{" + padNum9T(startBlock) + "}");
             replace(msg, "{1}", "{" + padNum9T(endBlock) + "}");

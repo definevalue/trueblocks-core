@@ -27,27 +27,33 @@ typedef struct CReverseAppMapEntry {
     uint32_t tx;
 } CReverseAppMapEntry;
 
+typedef enum {
+    IP_NONE = 0,
+    IP_HEADER = (1 << 1),
+    IP_ADDRS = (1 << 2),
+    IP_APPS = (1 << 3),
+    IP_ALL = (IP_HEADER | IP_ADDRS | IP_APPS),
+} indexparts_t;
+
 //---------------------------------------------------------------------------
 class CIndexArchive : public CArchive {
   public:
-    CIndexHeader* header;
-    uint64_t nAddrs;
+    CIndexHeader header;
     CIndexedAddress* addresses;
-    CBlockRangeArray reverseAddrRanges;
-    uint64_t nApps;
     CIndexedAppearance* appearances;
+    CBlockRangeArray reverseAddrRanges;
     CReverseAppMapEntry* reverseAppMap{nullptr};
 
     explicit CIndexArchive(bool mode);
     ~CIndexArchive(void);
-    bool ReadIndexFromBinary(const string_q& fn);
-    bool ReadIndexHeader(const string_q& fn, CIndexHeader& header);
+    bool ReadIndexFromBinary(const string_q& fn, indexparts_t parts);
     bool LoadReverseMaps(const blkrange_t& range);
 
   private:
     char* rawData;
     CIndexArchive(void) : CArchive(READING_ARCHIVE) {
     }
+    void clean(void);
 };
 
 //-----------------------------------------------------------------------
@@ -68,9 +74,7 @@ extern bool readIndexHeader(const string_q& inFn, CIndexHeader& header);
 }  // namespace qblocks
 
 #if 0
-// extern size_t readIndexFromBinary(const string_q& inFn, uint64_t& nApps, const CStringArray& lines);
 // extern bool forEveryIndexChunk(INDEXCHUNKFUNC func, void* data);
 // extern bool forEveryAddressInIndex(ADDRESSFUNC func, const blkrange_t& range, void* data);
 // extern bool forEverySmartContractInIndex(ADDRESSFUNC func, void* data);
-// extern bool chunksAreInitalized(void);
 #endif
