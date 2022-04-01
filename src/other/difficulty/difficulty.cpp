@@ -14,8 +14,8 @@
 
 // NOTE -- REMOVE SLEEP ONCE WE GO BACK TO USING ERIGON
 
-#define START 14418230
-#define END 14449568
+#define START 14491400
+#define END 14493256
 
 int main(int argc, const char* argv[]) {
     loadEnvironmentPaths("mainnet", "/Users/jrush/Development/trueblocks-core/build/shit/");
