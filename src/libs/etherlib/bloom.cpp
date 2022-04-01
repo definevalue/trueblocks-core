@@ -53,7 +53,7 @@ void bloom_t::lightBit(size_t bit) {
 }
 
 //---------------------------------------------------------------------------
-static bool isBitLit(size_t bit, uint8_t* bits) {
+bool isBitLit(size_t bit, uint8_t* bits) {
     size_t whence = (bit % 8);
     uint8_t mask = uint8_t(1 << whence);
 
@@ -89,7 +89,7 @@ bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits) {
 static CUintArray unused;
 static const bloom_t zeroBloom = addr_2_Bloom("0x0", unused);
 //----------------------------------------------------------------------
-bool addAddrToBloom(CBloomArray& blooms, const address_t& addr) {
+bool addAddrToBloom(CBloomFilter& blooms, const address_t& addr) {
     if (blooms.size() == 0)
         blooms.push_back(zeroBloom);  // so we have something to add to
 
@@ -106,7 +106,13 @@ bool addAddrToBloom(CBloomArray& blooms, const address_t& addr) {
 }
 
 //----------------------------------------------------------------------
-bool isInBloomFilter(const CBloomArray& blooms, const bloom_t& bloomIn) {
+bool isInBloomFilter(const CBloomFilter& blooms, const address_t& addr) {
+    CUintArray unused;
+    return isInBloomFilter(blooms, addr_2_Bloom(addr, unused));
+}
+
+//----------------------------------------------------------------------
+bool isInBloomFilter(const CBloomFilter& blooms, const bloom_t& bloomIn) {
     for (auto bloom : blooms) {
         if (bloom.isInBloom(bloomIn))
             return true;
@@ -115,7 +121,7 @@ bool isInBloomFilter(const CBloomArray& blooms, const bloom_t& bloomIn) {
 }
 
 //----------------------------------------------------------------------------------
-bool readBloomFilter(const string_q& fileName, CBloomArray& blooms, bool readBits) {
+bool readBloomFilter(const string_q& fileName, CBloomFilter& blooms, bool readBits) {
     blooms.clear();
     CArchive bloomCache(READING_ARCHIVE);
     if (bloomCache.Lock(fileName, modeReadOnly, LOCK_NOWAIT)) {
@@ -138,7 +144,7 @@ bool readBloomFilter(const string_q& fileName, CBloomArray& blooms, bool readBit
 }
 
 //----------------------------------------------------------------------
-bool writeBloomFilter(const string_q& fileName, const CBloomArray& blooms) {
+bool writeBloomFilter(const string_q& fileName, const CBloomFilter& blooms) {
     lockSection();
     CArchive output(WRITING_ARCHIVE);
     if (!output.Lock(fileName, modeWriteCreate, LOCK_NOWAIT)) {

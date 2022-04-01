@@ -36,7 +36,7 @@ class bloom_t {
     void copy(const bloom_t& b);
     void init(void);
 };
-typedef vector<bloom_t> CBloomArray;
+typedef vector<bloom_t> CBloomFilter;
 
 //---------------------------------------------------------------------------
 inline bloom_t::bloom_t(void) {
@@ -63,9 +63,11 @@ inline bloom_t& bloom_t::operator=(const bloom_t& b) {
 
 //---------------------------------------------------------------------------
 extern bloom_t addr_2_Bloom(const address_t& addrIn, CUintArray& litBits);
-extern bool addAddrToBloom(CBloomArray& blooms, const address_t& addr);
-extern bool isInBloomFilter(const CBloomArray& blooms, const bloom_t& bloom);
-extern bool writeBloomFilter(const string_q& fileName, const CBloomArray& blooms);
-extern bool readBloomFilter(const string_q& fileName, CBloomArray& blooms, bool readBits);
+extern bool addAddrToBloom(CBloomFilter& blooms, const address_t& addr);
+extern bool isInBloomFilter(const CBloomFilter& blooms, const bloom_t& bloom);
+extern bool isInBloomFilter(const CBloomFilter& blooms, const address_t& addr);
+extern bool writeBloomFilter(const string_q& fileName, const CBloomFilter& blooms);
+extern bool readBloomFilter(const string_q& fileName, CBloomFilter& blooms, bool readBits);
+extern bool isBitLit(size_t bit, uint8_t* bits);
 
 }  // namespace qblocks

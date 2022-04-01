@@ -287,7 +287,7 @@ bool writeIndexAsBinary(const string_q& outFn, const CStringArray& lines, CONSTA
 
     hashbytes_t hash = hash_2_Bytes(versionHash);
 
-    CBloomArray blooms;
+    CBloomFilter blooms;
 
     CArchive archive(WRITING_ARCHIVE);
     if (!archive.Lock(tmpFile2, modeWriteCreate, LOCK_NOWAIT)) {

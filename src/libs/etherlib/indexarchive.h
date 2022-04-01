@@ -55,7 +55,7 @@ class CIndexArchive : public CArchive {
 extern hash_t versionHash;
 //--------------------------------------------------------------
 typedef bool (*INDEXCHUNKFUNC)(CIndexArchive& chunk, void* data);
-typedef bool (*INDEXBLOOMFUNC)(CBloomArray& blooms, void* data);
+typedef bool (*INDEXBLOOMFUNC)(CBloomFilter& blooms, void* data);
 typedef bool (*ADDRESSFUNC)(const address_t& addr, void* data);
 class CChunkVisitor {
   public:
