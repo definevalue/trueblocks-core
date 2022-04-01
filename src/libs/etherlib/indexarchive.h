@@ -20,36 +20,42 @@
 
 namespace qblocks {
 
-typedef struct CReverseAppMapEntry {
-  public:
-    uint32_t n;
-    uint32_t blk;
-    uint32_t tx;
-} CReverseAppMapEntry;
-
 typedef enum {
     IP_NONE = 0,
     IP_HEADER = (1 << 1),
-    IP_ADDRS = (1 << 2),
-    IP_APPS = (1 << 3),
+    IP_ADDRS = ((1 << 2) | IP_HEADER),
+    IP_APPS = ((1 << 3) | IP_HEADER),
     IP_ALL = (IP_HEADER | IP_ADDRS | IP_APPS),
 } indexparts_t;
 
 //---------------------------------------------------------------------------
 class CIndexArchive : public CArchive {
+    CIndexedAddress* addresses2;
+    CIndexedAppearance* appearances2;
+
   public:
     CIndexHeader header;
-    CIndexedAddress* addresses;
-    CIndexedAppearance* appearances;
-    CBlockRangeArray reverseAddrRanges;
-    CReverseAppMapEntry* reverseAppMap{nullptr};
 
     explicit CIndexArchive(bool mode);
-    ~CIndexArchive(void);
+    virtual ~CIndexArchive(void);
     bool ReadIndexFromBinary(const string_q& fn, indexparts_t parts);
-    bool LoadReverseMaps(const blkrange_t& range);
+    blkrange_t getAppRangeForAddrAt(size_t i) const {
+        ASSERT(addresses2 && i < header.nAddrs);
+        blkrange_t r;
+        r.first = addresses2[i].offset;
+        r.second = r.first + addresses2[i].cnt - 1;
+        return r;
+    }
+    CIndexedAppearance* getAppearanceAt(size_t i) {
+        ASSERT(appearances2 && i < header.nApps);
+        return &appearances2[i];
+    }
+    CIndexedAddress* getAddressAt(size_t i) {
+        ASSERT(addresses2 && i < header.nAddrs);
+        return &addresses2[i];
+    }
 
-  private:
+  protected:
     char* rawData;
     CIndexArchive(void) : CArchive(READING_ARCHIVE) {
     }

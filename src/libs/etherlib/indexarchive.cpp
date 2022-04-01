@@ -15,10 +15,9 @@
 namespace qblocks {
 //----------------------------------------------------------------
 CIndexArchive::CIndexArchive(bool mode) : CArchive(mode) {
-    addresses = nullptr;
-    appearances = nullptr;
+    addresses2 = nullptr;
+    appearances2 = nullptr;
     rawData = nullptr;
-    reverseAppMap = nullptr;
 }
 
 //----------------------------------------------------------------
@@ -32,14 +31,9 @@ void CIndexArchive::clean(void) {
         delete[] rawData;
         rawData = nullptr;
         header = CIndexHeader();
-        addresses = nullptr;
-        appearances = nullptr;
+        addresses2 = nullptr;
+        appearances2 = nullptr;
     }
-    if (reverseAppMap) {
-        delete[] reverseAppMap;
-        reverseAppMap = nullptr;
-    }
-    reverseAddrRanges.clear();
     Release();
 }
 
@@ -85,11 +79,11 @@ bool CIndexArchive::ReadIndexFromBinary(const string_q& path, indexparts_t parts
     size_t startOfAppsTable = startOfAddrTable + addrTableSize;
 
     if (parts == IP_HEADER) {
-        addresses = nullptr;
-        appearances = nullptr;
+        addresses2 = nullptr;
+        appearances2 = nullptr;
     } else {
-        addresses = (CIndexedAddress*)(rawData + startOfAddrTable);       // NOLINT
-        appearances = (CIndexedAppearance*)(rawData + startOfAppsTable);  // NOLINT
+        addresses2 = (CIndexedAddress*)(rawData + startOfAddrTable);       // NOLINT
+        appearances2 = (CIndexedAppearance*)(rawData + startOfAppsTable);  // NOLINT
     }
     Release();
     return true;
@@ -127,90 +121,6 @@ bool readIndexHeader(const string_q& path, CIndexHeader& header) {
     ASSERT(header.magic == MAGIC_NUMBER);
     // ASSERT(bytes_2_Hash(h->hash) == versionHash);
     archive.Release();
-    return true;
-}
-
-//-----------------------------------------------------------------------
-int sortRecords(const void* i1, const void* i2) {
-    int32_t* p1 = (int32_t*)i1;
-    int32_t* p2 = (int32_t*)i2;
-    if (p1[1] == p2[1]) {
-        if (p1[2] == p2[2]) {
-            return (p1[0] - p2[0]);
-        }
-        return p1[2] - p2[2];
-    }
-    return p1[1] - p2[1];
-}
-
-//-----------------------------------------------------------------------
-bool CIndexArchive::LoadReverseMaps(const blkrange_t& range) {
-    if (reverseAppMap) {
-        delete[] reverseAppMap;
-        reverseAddrRanges.clear();
-        reverseAppMap = nullptr;
-    }
-
-    uint32_t nAppsHere = header.nApps;
-
-    string_q mapFile = substitute(getFilename(), indexFolder_finalized, indexFolder_map);
-    if (fileExists(mapFile)) {
-        CArchive archive(READING_ARCHIVE);
-        if (!archive.Lock(mapFile, modeReadOnly, LOCK_NOWAIT)) {
-            LOG_ERR("Could not open file ", mapFile);
-            return false;
-        }
-        size_t nRecords = fileSize(mapFile) / sizeof(CReverseAppMapEntry);
-        ASSERT(nRecords == nAppsHere);
-        // Cleaned up on destruction of the chunk
-        reverseAppMap = new CReverseAppMapEntry[nRecords];
-        if (!reverseAppMap) {
-            LOG_ERR("Could not allocate memory for CReverseAppMapEntry");
-            return false;
-        }
-        archive.Read((char*)reverseAppMap, sizeof(char), nRecords * sizeof(CReverseAppMapEntry));
-        archive.Release();
-        blknum_t cur = 0;
-        for (uint32_t i = 0; i < header.nAddrs; i++) {
-            blkrange_t r;
-            r.first = cur + addresses[i].offset;
-            r.second = r.first + addresses[i].cnt - 1;
-            reverseAddrRanges.push_back(r);
-        }
-        return true;
-    }
-
-    // Cleaned up on destruction of the chunk
-    reverseAppMap = new CReverseAppMapEntry[nAppsHere];
-    if (!reverseAppMap) {
-        LOG_ERR("Could not allocate memory for CReverseAppMapEntry");
-        return false;
-    }
-    for (uint32_t i = 0; i < nAppsHere; i++) {
-        reverseAppMap[i].n = i;
-        reverseAppMap[i].blk = appearances[i].blk;
-        reverseAppMap[i].tx = appearances[i].txid;
-    }
-
-    blknum_t cur = 0;
-    for (uint32_t i = 0; i < header.nAddrs; i++) {
-        blkrange_t r;
-        r.first = cur + addresses[i].offset;
-        r.second = r.first + addresses[i].cnt - 1;
-        reverseAddrRanges.push_back(r);
-    }
-
-    qsort(reverseAppMap, nAppsHere, sizeof(CReverseAppMapEntry), sortRecords);
-
-    CArchive archive(WRITING_ARCHIVE);
-    if (!archive.Lock(mapFile, modeWriteCreate, LOCK_WAIT)) {
-        LOG_ERR("Could not open file ", mapFile);
-        return false;
-    }
-    archive.Write(reverseAppMap, sizeof(char), nAppsHere * sizeof(CReverseAppMapEntry));
-    archive.Release();
-
-    LOG_PROG("Processed: " + getFilename());
     return true;
 }
 
