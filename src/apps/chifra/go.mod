@@ -12,6 +12,6 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 	github.com/wealdtech/go-ens/v3 v3.5.2
-	golang.org/x/crypto v0.0.0-20220213190939-1e6e3497d506
+	golang.org/x/crypto v0.1.0
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 )
